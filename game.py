@@ -66,10 +66,9 @@ def main_loop():
             pygame.mixer_music.stop()
             pygame.mixer_music.load('./assets/music/main_music.ogg')
             pygame.mixer_music.play(loops=-1)
-            voice.say("Bonjour Florian ... prêt à me défier ? hahaha ! ... Je suis invincible")
 
     elif state.state == STATE_MAIN:
-        color = math.sin(time / 2000) ** 2
+        color = 0.0 * math.sin(time / 2000) ** 2
         pygame.draw.rect(screen, (10 * color, 0, 0), (0, 0, SIZEX, SIZEY))
         a = 30 * math.sin(time/3000)
         b = 30 * math.cos(time/3000)

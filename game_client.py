@@ -54,7 +54,7 @@ def make_get_request(route):
 
 def make_post_request_(route, **kwargs):
     URL = host + ':' + str(port) + '/' + route
-    requests.post(url=URL, data=kwargs)
+    requests.post(url=URL, json=kwargs)
 
 def make_post_request(route, **kwargs):
     threading.Thread(target=make_post_request_, args=(route,), kwargs=kwargs).start()
@@ -97,7 +97,10 @@ def send_text(text):
             state.set_state(STATE_LOGIN_USER)
         else:
             make_get_request('start')
+            make_post_request('say', text=f"Bonjour {state.data['user']}")
             state.set_state(STATE_INTRO)
+    elif state.state == STATE_INTRO:
+        make_post_request('say', text=text)
 
 def display_console():
     global text

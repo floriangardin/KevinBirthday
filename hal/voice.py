@@ -12,7 +12,7 @@ class Voice:
         self.engine = pyttsx3.init('sapi5')
         print(self.engine.getProperty('voices'))
         voice = self.engine.getProperty('voices')[2]  # the french voice
-        newVoiceRate = 150
+        newVoiceRate = 120
         self.engine.setProperty('rate', newVoiceRate)
         self.engine.setProperty('voice', voice.id)
         self.should_stop = False
@@ -45,7 +45,7 @@ class Voice:
             except Exception as e:
                 print(e)
         voice = self.engine.getProperty('voices')[2]  # the french voice
-        newVoiceRate = 150
+        newVoiceRate = 120
         self.engine.setProperty('rate', newVoiceRate)
         self.engine.setProperty('voice', voice.id)
         self.engine.say(text)
