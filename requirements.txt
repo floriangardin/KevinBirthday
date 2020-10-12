@@ -1,0 +1,6 @@
+requests
+flask
+pygame
+Pillow
+pyttsx3
+numpy
