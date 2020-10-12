@@ -3,6 +3,7 @@ import pygame
 pygame.init()
 import glob
 from hal.state import *
+import math
 from hal.server import app
 
 """
@@ -25,7 +26,7 @@ else:
 
 ## LOAD ASSETS
 
-imgs_gilles = [pygame.image.load(image) for image in glob.glob("./assets/gilles/*gif")]
+imgs_gilles = [pygame.image.load(image) for image in glob.glob("./assets/hal/*gif")]
 gilles_size_x, gilles_size_y = imgs_gilles[0].get_size()
 music_gilles = pygame.mixer_music.load('./assets/music/main_music.ogg')
 white_noise = pygame.mixer_music.load('./assets/music/white_noise.ogg')
@@ -68,8 +69,11 @@ def main_loop():
             voice.say("Bonjour Florian ... prêt à me défier ? hahaha ! ... Je suis invincible")
 
     elif state.state == STATE_MAIN:
-        pygame.draw.rect(screen, (0, 0, 0), (0, 0, SIZEX, SIZEY))
-        print_gilles_images(screen, (SIZEX - gilles_size_x) / 2, (SIZEY - gilles_size_y) / 2, time)
+        color = math.sin(time / 2000) ** 2
+        pygame.draw.rect(screen, (10 * color, 0, 0), (0, 0, SIZEX, SIZEY))
+        a = 30 * math.sin(time/3000)
+        b = 30 * math.cos(time/3000)
+        print_gilles_images(screen, (SIZEX - gilles_size_x + a) / 2, (SIZEY - gilles_size_y + b) / 2, time)
 
     pygame.display.flip()
     clock.tick(60)
