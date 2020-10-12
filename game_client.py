@@ -97,7 +97,8 @@ def send_text(text):
             state.set_state(STATE_LOGIN_USER)
         else:
             make_get_request('start')
-            make_post_request('say', text=f"Bonjour {state.data['user']}")
+            # Replace by introduction text
+            make_post_request('say', text=f"Bonjour {state.data['user']}", delay=2)
             state.set_state(STATE_INTRO)
     elif state.state == STATE_INTRO:
         make_post_request('say', text=text)

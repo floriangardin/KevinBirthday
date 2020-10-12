@@ -1,6 +1,6 @@
 import pyttsx3
 import threading
-
+import time
 
 
 
@@ -18,10 +18,10 @@ class Voice:
         self.should_stop = False
         self._running = False
 
-    def say(self, text):
+    def say(self, text, **kwargs):
 
         threading.Thread(
-            target=self.say_, args=(text,), daemon=True
+            target=self.say_, args=(text,), kwargs=kwargs, daemon=True
         ).start()
 
     def stop(self):
@@ -33,9 +33,10 @@ class Voice:
     def stop_(self):
         self.engine.stop()
 
-    def say_(self, text):
+    def say_(self, text, delay=0):
         self._running = False
-
+        if delay > 0:
+            time.sleep(delay)
         while True:
             if not self.engine._inLoop:
                 break

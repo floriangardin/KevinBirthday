@@ -16,7 +16,8 @@ def main():
 def main_say():
     if request.method == 'POST':
         text = request.json['text']
-        voice.say(text)
+        delay = request.json['delay']
+        voice.say(text, delay=delay)
         return make_response()
 
 
