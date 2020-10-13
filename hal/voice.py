@@ -5,7 +5,6 @@ import time
 
 
 
-
 class Voice:
 
     def __init__(self):
@@ -33,7 +32,7 @@ class Voice:
     def stop_(self):
         self.engine.stop()
 
-    def say_(self, text, delay=0):
+    def say_(self, text, delay=0, only_write=False):
         self._running = False
         if delay > 0:
             time.sleep(delay)

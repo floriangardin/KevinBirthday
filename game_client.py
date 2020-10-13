@@ -4,13 +4,12 @@ import flask
 
 import pygame
 import math
-from client import  pygame_textinput
+from client import pygame_textinput
 import pygame.freetype
 
 pygame.init()
 import glob
 from client.states import *
-from hal.server import app
 
 """
 State and params
@@ -110,7 +109,6 @@ def display_console():
     time = math.sin(time * 2 * math.pi) ** 2
     textsurface = myfont.render('>', True, (255 * time, 255 * time, 255 * time))
     screen.blit(textsurface, (SIZEX//10, SIZEY // 2))
-
 
     text = textinput.get_text()
 
