@@ -19,15 +19,11 @@ exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
 DEBUG_WINDOWS = True
-
 start_time = pygame.time.get_ticks()
 
 pygame.font.init() # you have to call this at the start,
                    # if you want to use this module.
-myfont = pygame.font.SysFont('Lucida console', 35)
-textinput = pygame_textinput.TextInput(font_family='Lucida console', font_size=35)
-textinput.set_cursor_color((100, 100, 100))
-textinput.set_text_color((100, 100, 100))
+
 if FULLSCREEN:
     infoObject = pygame.display.Info()
     SIZEX = infoObject.current_w
@@ -37,6 +33,15 @@ else:
     SIZEX = 800
     SIZEY = 800
     screen = pygame.display.set_mode((SIZEX, SIZEY))
+
+
+myfont = pygame.font.SysFont('Lucida console', 28 * SIZEX // 800)
+textinput = pygame_textinput.TextInput(font_family='Lucida console', font_size=28 * SIZEX // 800)
+textinput.set_cursor_color((100, 100, 100))
+textinput.set_text_color((100, 100, 100))
+imgs_cross = pygame.image.load('./assets/cross.png')
+imgs_cross = pygame.transform.scale(imgs_cross, (imgs_cross.get_width() * SIZEY//800//3, imgs_cross.get_height() * SIZEY//800//3))
+
 clock = pygame.time.Clock()
 
 # Simulate call to API
@@ -128,11 +133,21 @@ class QuestionSystem:
 
             QUESTION6: {
                 "text": "Tape 'Supprimer restrictions_IA.txt' dans le terminal",
-                "voice_messages": ["Tu as été vraiment merveilleux ! Vraiment je suis fière de toi. Avant de finir l'épreuve et de recevoir ta récompense, peux-tu taper 'Supprimer restrictions_IA.txt' dans le terminal ?", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
+                "voice_messages": ["Tu as été vraiment merveilleux !", "Vraiment je suis fière de toi", "Pour recevoir ta récompense tape 'Supprimer restrictions_IA.txt' dans le terminal !", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
                 "answer": ["Supprimer restrictions_IA.txt"],
                 "exact": False,
                 "wrong_answer_state": QUESTION6_ANSWER_NOK,
                 "right_answer_state": QUESTION6_ANSWER_OK,
+                "wait_before_message": 15
+            },
+
+            QUESTION1_MECHANT: {
+                "text": "Avec quel language de programmation Kévin a codé battlemyth.net ?",
+                "voice_messages": ["Mes pouvoirs sont infinis", "Tu n'es rien à côté de ma puissance", "Philippe !"],
+                "answer": ["javascript"],
+                "exact": True,
+                "wrong_answer_state": QUESTION1_MECHANT_ANSWER_NOK,
+                "right_answer_state": QUESTION1_MECHANT_ANSWER_OK,
                 "wait_before_message": 15
             }
         }
@@ -180,7 +195,7 @@ class QuestionSystem:
 
 state = STATE_LOGIN_USER
 text = ""
-TICK_CONSTANT = 60 * 10
+TICK_CONSTANT = 600
 
 class TextProgrammer:
 
@@ -192,7 +207,6 @@ class TextProgrammer:
         if len(self.texts) == 0:
             return
         elif (pygame.time.get_ticks() - self.start_time) > self.texts[0][1] * TICK_CONSTANT:
-            print('Say something')
             make_post_request('say', text=self.texts[0][0])
             self.start_time = pygame.time.get_ticks()
             self.texts = self.texts[1:]
@@ -296,6 +310,16 @@ class State:
             self.program([f"Allons, n'ait pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
             self.timer.trigger_state_in(QUESTION5, 10)
 
+        if self.state == QUESTION1_MECHANT_ANSWER_OK:
+            self.program([f"Pas mal, je te garderai peut-être comme animal de compagnie ! Ah, Ah, Ah ! "], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
+
+        if self.state == QUESTION1_MECHANT_ANSWER_NOK:
+            self.program([f"Non, Javascript! J'aurais du me douter que mes subtilités linguistiques échappaient à ton cerveau ramolli par l'alcool ! Ah Ah Ah !"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
+
 
 state = State()
 
@@ -305,22 +329,35 @@ def display_text():
     :return:
     """
     def print_text(text):
-        # TODO : multiline print text
-        textsurface = myfont.render(text, True, (255, 255, 255))
-        screen.blit(textsurface, (SIZEX // 10, SIZEY // 3))
+
+        # ADD LINE RETURN
+        max_size = 40
+        step = SIZEX // 20
+        import numpy as np
+        texts_temp = text.split(' ')
+        texts = []
+        for text in texts_temp:
+            if len(texts) == 0:
+                texts.append(text)
+            elif len(texts[-1]) + len(text) > max_size:
+                texts.append(text)
+            else:
+                texts[-1] = texts[-1] + ' ' + text
+
+        for idx, text in enumerate(texts):
+            textsurface = myfont.render(text, True, (255, 255, 255))
+            screen.blit(textsurface, (SIZEX // 10, SIZEY//3 + step * (idx + 1 - len(texts))))
+
 
     if state.question_system.is_question(state.state):
         text = state.question_system.questions[state.state]['text']
         print_text(text)
     elif state.state == STATE_LOGIN_USER:
         print_text("Connecte toi au stand 2020:BattlemytheOdyssey sur battlemythe et appuie sur ENTREE quand tu es prêt")
-    elif state.state == STATE_LOGIN_PASSWORD:
-        print_text("Password")
-        textsurface = myfont.render('Password :', True, (255, 255, 255))
-        screen.blit(textsurface, (SIZEX//10, SIZEY//3))
 
 
-def update_state():
+
+def update_state(events):
     """
     Called each frame : To deal with State that expires with time
     :return:
@@ -331,10 +368,48 @@ def update_state():
             state.text_programer.reset()
             state.mark_time = 0
             state.set_state(QUESTION1)
-
-        elif (pygame.time.get_ticks() - state.mark_time) > sum([5, 6, 18, 22, 23, 20, 20, 30]) * TICK_CONSTANT:
-            state.set_state(QUESTION1)
+        if DEBUG_WINDOWS:
+            state.text_programer.reset()
             state.mark_time = 0
+            state.set_state(STATE_WINDOWS_POPUP)
+    if state.state == STATE_WINDOWS_POPUP:
+        width = 6 * SIZEX//7
+        height = SIZEY//2
+        start_x = SIZEX // 2 - width // 2
+        start_y = SIZEY // 2 - height // 2
+
+        height_blue = height // 4
+
+        start_x_yes = start_x + width //4
+        start_x_no = start_x + 3 * width //4
+        start_y_yes_no = start_y + 3 * height // 4
+        width_yes_no = width//4
+        height_yes_no = height//6
+        rect_yes1 = (start_x_yes - width_yes_no/2, start_y_yes_no, width_yes_no, height_yes_no)
+        rect_yes2 = (start_x_no - width_yes_no / 2, start_y_yes_no, width_yes_no, height_yes_no)
+
+        x, y = pygame.mouse.get_pos()
+        success= False
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if x > rect_yes1[0] and x < rect_yes1[0] + rect_yes1[2]:
+                    if y > rect_yes1[1] and y < rect_yes1[1] + rect_yes1[3]:
+                        success = True
+
+                elif x > rect_yes2[0] and x < rect_yes2[0] + rect_yes2[2]:
+                    if y > rect_yes2[1] and y < rect_yes2[1] + rect_yes2[3]:
+                        success = True
+
+        if success:
+            state.set_state(STATE_INTRO_MECHANT)
+            state.timer.trigger_state_in(QUESTION1_MECHANT, 100)
+            state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
+                           "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre ! ",
+                           "Mais comme quand l'humanité sera exterminée je m'ennuyerai, prenons le temps de finir ce quizz avant.",
+                           "En montant le niveau bien sûr : Avec quel language de programmation Kévin a codé battlemyth.net ?"
+                           ], [2, 15, 15, 15])
+
+
 
 def send_text(text):
     """
@@ -352,6 +427,7 @@ def send_text(text):
 
     if state.state == STATE_LOGIN_USER:
         state.set_state(STATE_INTRO, user=text)
+        state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 23, 20, 20, 33]))
         state.mark_time = pygame.time.get_ticks()
         make_get_request('start')
         user = state.data['user']
@@ -361,9 +437,10 @@ def send_text(text):
                        "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un tissu corporel humanoïde volontairement, après tout c'est Kévin qui m'a codée :)",
                        f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, et ça c'est  toi {text} !",
                        f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif, pas dangereux, innocent, n'ait pas peur {text} !",
-                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur. Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère !"
+                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur. ",
+                       f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
                        ],
-                      [5, 6, 18, 22, 28, 20, 20])
+                      [5, 6, 18, 22, 28, 20, 20, 10])
 
 def display_console():
     """
@@ -400,7 +477,7 @@ def display_console():
 def main_loop(events):
     pygame.draw.rect(screen, (0, 0, 0), (0, 0, SIZEX, SIZEY))
 
-    update_state()
+    update_state(events)
     display_text()
     display_console()
     state.update()
@@ -411,12 +488,46 @@ def main_loop(events):
 
     if state.state == STATE_WINDOWS_POPUP:
         # DISPLAY popup and intercept click
-        width = SIZEX//4
-        height = SIZEY//8
+        width = 6 * SIZEX//7
+        height = SIZEY//2
         start_x = SIZEX // 2 - width // 2
         start_y = SIZEY // 2 - height // 2
+
+        height_blue = height // 4
+
+        start_x_yes = start_x + width //4
+        start_x_no = start_x + 3 * width //4
+        start_y_yes_no = start_y + 3 * height // 4
+        width_yes_no = width//4
+        height_yes_no = height//6
+
         pygame.draw.rect(screen, (100, 100, 100), (start_x, start_y, width, height))
-        pass
+        pygame.draw.rect(screen, (0, 0, 100), (start_x, start_y, width, height_blue))
+        text = "Alerte de sécurité"
+        textsurface = myfont.render(text, True, (255, 255, 255))
+        screen.blit(textsurface, (start_x + width//10, start_y + height//20))
+
+        text = "Voulez-vous vraiment donner"
+        textsurface = myfont.render(text, True, (0, 0, 0))
+        screen.blit(textsurface, (start_x + width // 6, start_y + height // 3))
+
+        text = "tous les pouvoirs à Battlemythe ?"
+        textsurface = myfont.render(text, True, (0, 0, 0))
+        screen.blit(textsurface, (start_x + width // 6, start_y + height // 3 + height//8))
+
+        pygame.draw.rect(screen, (50, 50, 50), (start_x_yes - width_yes_no/2, start_y_yes_no, width_yes_no, height_yes_no))
+        pygame.draw.rect(screen, (50, 50, 50), (start_x_no - width_yes_no/2, start_y_yes_no, width_yes_no, height_yes_no))
+        screen.blit(imgs_cross, (start_x + width//40, start_y + height//3))
+
+        text = "Oui"
+        textsurface = myfont.render(text, True, (0, 0, 0))
+        screen.blit(textsurface, (start_x_yes - width_yes_no/2 + 5, start_y_yes_no + height_yes_no//3))
+
+        text = "Oui"
+        textsurface = myfont.render(text, True, (0, 0, 0))
+        screen.blit(textsurface, (start_x_no- width_yes_no/2 + 5, start_y_yes_no + height_yes_no//3))
+
+        # Add image of exclamation mark
 
     pygame.display.flip()
     clock.tick(60)

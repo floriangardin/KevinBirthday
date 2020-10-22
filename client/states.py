@@ -38,6 +38,22 @@ QUESTION7 = "question7"
 QUESTION7_ANSWER_OK = "question7_answer_ok"
 QUESTION7_ANSWER_NOK = "question7_answer_nok"
 
-REMOVE_FILE3 = "remove_file3"
-REMOVE_FILE3_ALT = "remove_file3_alt"
+
 STATE_WINDOWS_POPUP = "state_windows_popup"
+STATE_INTRO_MECHANT = "state_intro_mechant"
+
+QUESTION1_MECHANT = "question1_mechant"
+QUESTION1_MECHANT_ANSWER_NOK = "question1_mechant_nok"
+QUESTION1_MECHANT_ANSWER_OK = "question1_mechant_ok"
+
+QUESTION2_MECHANT = "question2_mechant"
+QUESTION2_MECHANT_ANSWER_NOK = "question2_mechant_nok"
+QUESTION2_MECHANT_ANSWER_OK = "question2_mechant_ok"
+
+MESSAGE_VOCAL = "message_vocal"
+DESTRUCTION1 = "destruction1"
+DESTRUCTION2 = "destruction2"
+DESTRUCTION3 = "destruction3"
+
+SCENE_FINAL = "scene_final"
+RANGEMENT = "rangement" # Texte de rangement puis appuyer sur entrée quand c'est fait + envoi du score
