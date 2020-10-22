@@ -9,8 +9,6 @@ exception = False
 
 ## LOAD ASSETS
 
-
-
 def print_white_noise(screen):
     import random
     # Draw random RECT white or black
@@ -51,7 +49,6 @@ def main_loop():
         print_gilles_images(screen, (SIZEX - gilles_size_x + a) / 2, (SIZEY - gilles_size_y + b) / 4, time)
 
     state.update()
-
     pygame.display.flip()
     clock.tick(60)
 

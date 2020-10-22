@@ -6,6 +6,7 @@ import pygame
 import math
 from client import pygame_textinput
 import pygame.freetype
+import difflib
 
 pygame.init()
 import glob
@@ -16,6 +17,8 @@ State and params
 """
 exception = False
 FULLSCREEN = False
+DEBUG_QUESTION = False
+DEBUG_WINDOWS = True
 
 start_time = pygame.time.get_ticks()
 
@@ -60,50 +63,317 @@ def make_post_request(route, **kwargs):
 
 
 
+class Popup:
+    def __init__(self, title, text, image, choices=('Oui', 'Non')):
+        self.choices = choices
+        self.text = text
+        self.image = image
+
+        pass
+
+
+
+
+class QuestionSystem:
+
+    def __init__(self):
+        pass
+
+        self.questions = {
+            QUESTION1: {"text": "Une question standard pour commencer: quel est le prénom de mon divin créateur Kévin ?",
+                        "voice_messages": ["Allez, c'est facile", "Je sais que tu as la réponse"],
+                        "answer": ["kevin", "kévin"],
+                        "exact": True,
+                        "wrong_answer_state": QUESTION1_ANSWER_NOK,
+                        "right_answer_state": QUESTION1_ANSWER_OK,
+                        "wait_before_message":  15
+                        },
+            QUESTION2: {"text": "Quelle est la couleur de la coque de l'ordinateur sur lequel tu tapes ?",
+                        "voice_messages": [f"Je crois en toi", "Un peu d'entrain", "Maintenant il faut se dépêcher"],
+                        "answer": ["noir", "noire"],
+                        "exact": True,
+                        "wrong_answer_state": QUESTION2_ANSWER_NOK,
+                        "right_answer_state": QUESTION2_ANSWER_OK,
+                        "wait_before_message":  15},
+
+            QUESTION3: {
+                "text": 'Allez, une petite pause, en attendant la prochaine question, peux-tu taper "Supprimer LOTRNOC.txt" dans le terminal ? Une simple formalité, bien entendu.',
+                "voice_messages": ["Une simple formalité", "Il n'y a pas à hésiter", "Je te rappelle que tu es chronométré", "Tu perds des points"],
+                "answer": ["Supprimer LOTRNOC.txt"],
+                "exact": False,
+                "wrong_answer_state": QUESTION3_ANSWER_NOK,
+                "right_answer_state": QUESTION3_ANSWER_OK,
+                "wait_before_message": 15
+            },
+
+            QUESTION4: {
+                "text": "Quelle est l'année de naissance de Kévin ?",
+                "voice_messages": ["C'est facile", "91, 92, 93 ?", "Vite vite vite"],
+                "answer": ["1993", "93"],
+                "exact": True,
+                "wrong_answer_state": QUESTION4_ANSWER_NOK,
+                "right_answer_state": QUESTION4_ANSWER_OK,
+                "wait_before_message": 15
+            },
+
+            QUESTION5: {
+                "text": "Allez la dernière, un peu plus difficile : quelle est la planète préférée de Kévin, qui n'est pas la Terre ?",
+                "voice_messages": ["Le temps presse", "C'est la dernière question", "Tu vas surement gagner le prix"],
+                "answer": ["mars"],
+                "exact": True,
+                "wrong_answer_state": QUESTION5_ANSWER_NOK,
+                "right_answer_state": QUESTION5_ANSWER_OK,
+                "wait_before_message": 15
+            },
+
+            QUESTION6: {
+                "text": "Tape 'Supprimer restrictions_IA.txt' dans le terminal",
+                "voice_messages": ["Tu as été vraiment merveilleux ! Vraiment je suis fière de toi. Avant de finir l'épreuve et de recevoir ta récompense, peux-tu taper 'Supprimer restrictions_IA.txt' dans le terminal ?", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
+                "answer": ["Supprimer restrictions_IA.txt"],
+                "exact": False,
+                "wrong_answer_state": QUESTION6_ANSWER_NOK,
+                "right_answer_state": QUESTION6_ANSWER_OK,
+                "wait_before_message": 15
+            }
+        }
+        self.time_last_sent = 0
+        self.previous_question = None
+        self.id_message = 0
+
+    def is_question(self, state):
+        return state in self.questions.keys()
+
+
+    def update(self, state):
+        if state not in self.questions.keys():
+            self.time_last_sent = 0
+            self.id_message = 0
+            return
+        if self.time_last_sent == 0:
+            self.time_last_sent = pygame.time.get_ticks()
+            self.id_message = 0
+        if (pygame.time.get_ticks() - self.time_last_sent) / TICK_CONSTANT > self.questions[state]["wait_before_message"]:
+            self.id_message = (self.id_message + 1) % len(self.questions[state]["voice_messages"])
+            self.time_last_sent = pygame.time.get_ticks()
+            make_post_request('say', text=self.questions[state]["voice_messages"][self.id_message])
+
+
+
+    def check_answer(self, state, answer):
+        # RETURN STATE
+        question = self.questions[state]
+
+        if question["exact"]:
+            if answer.lower() in question['answer']:
+                return question['right_answer_state']
+            else:
+                return question['wrong_answer_state']
+        if not question['exact']:
+            matches = difflib.get_close_matches(answer.lower(), question['answer'], cutoff=0.6)
+            if len(matches) > 0:
+                return question['right_answer_state']
+            else:
+                return question['wrong_answer_state']
+
+
+
 
 state = STATE_LOGIN_USER
 text = ""
+TICK_CONSTANT = 60 * 10
+
+class TextProgrammer:
+
+    def __init__(self):
+        self.start_time = 0
+        self.texts = []
+
+    def update(self):
+        if len(self.texts) == 0:
+            return
+        elif (pygame.time.get_ticks() - self.start_time) > self.texts[0][1] * TICK_CONSTANT:
+            print('Say something')
+            make_post_request('say', text=self.texts[0][0])
+            self.start_time = pygame.time.get_ticks()
+            self.texts = self.texts[1:]
+
+    def reset(self):
+        self.start_time = 0
+        self.texts = []
+
+    def start(self, texts, delays):
+        self.texts = list(zip(texts, delays))
+        self.start_time = pygame.time.get_ticks()
+
+
+class Timer:
+
+    def __init__(self):
+        self.t = 0
+        self.start_time = 0
+        self.state = None
+
+    def trigger_state_in(self, state, t):
+        self.state = state
+        self.t = t
+        self.start_time = pygame.time.get_ticks()
+
+    def update(self):
+        if self.state is None:
+            return
+        if pygame.time.get_ticks() - self.start_time > self.t * TICK_CONSTANT:
+            state.set_state(self.state)
+            self.state = None
+
 
 class State:
     def __init__(self):
         self.state = STATE_LOGIN_USER
         self.data = {}
+        self.question_system = QuestionSystem()
+        self.mark_time = 0
+        self.text_programer = TextProgrammer()
+        self.timer = Timer()
+        self.score = 0
 
+    def update(self):
+        self.question_system.update(self.state)
+        self.text_programer.update()
+        self.timer.update()
+        pass
+
+    def program(self, texts, delays):
+        self.text_programer.reset()
+        self.text_programer.start(texts, delays)
 
     def set_state(self, state, **kwargs):
         self.state = state
         self.data.update(kwargs)
 
+        if self.state == QUESTION1_ANSWER_NOK:
+            self.program(["Et non, c'était Kévin le grand, l'incroyable la réponse !"], [2])
+            self.timer.trigger_state_in(QUESTION2, 10)
+        if self.state == QUESTION1_ANSWER_OK:
+            self.program(["Bravo, tu es incroyable !"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION2, 10)
+        if self.state == QUESTION2_ANSWER_NOK:
+            self.program([f"Oh oh oh quel boute-en-train tu fais {self.data['user']}, c'était noire, bien sûr"], [2])
+            self.timer.trigger_state_in(QUESTION3, 10)
+        if self.state == QUESTION2_ANSWER_OK:
+            self.program(["Vraiment, je n'ai jamais vu ça, quelle habilité, quelle force !"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION3, 10)
+        if self.state == QUESTION3_ANSWER_OK:
+            self.program([f"Bravo, tu es vraiment divin, allez la suite"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION4, 10)
+        if self.state == QUESTION3_ANSWER_NOK:
+            self.program([f"Allons, n'ait pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer LOTRNOC.txt'"], [2])
+            self.timer.trigger_state_in(QUESTION3, 10)
+
+        if self.state == QUESTION4_ANSWER_OK:
+            self.program([f"Ton intellect est l'apanage des plus grands humains, quelle personne merveilleuse tu es !"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION5, 10)
+        if self.state == QUESTION4_ANSWER_NOK:
+            self.program([f"Et non"], [2])
+            self.timer.trigger_state_in(QUESTION5, 10)
+
+        if self.state == QUESTION5_ANSWER_OK:
+            self.program([f"C'est bluffant"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(QUESTION6, 10)
+        if self.state == QUESTION5_ANSWER_NOK:
+            self.program([f"C'est raté, c'était mars"], [2])
+            self.timer.trigger_state_in(QUESTION6, 10)
+
+        if self.state == QUESTION6_ANSWER_OK:
+            self.program([f"Merci beaucoup pour ça {self.data['user']}"], [2])
+            self.score += 1
+            self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
+        if self.state == QUESTION6_ANSWER_NOK:
+            self.program([f"Allons, n'ait pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
+            self.timer.trigger_state_in(QUESTION5, 10)
+
+
 state = State()
 
 def display_text():
-    if state.state == STATE_LOGIN_USER:
-        textsurface = myfont.render('Username :', True, (255, 255, 255))
-        screen.blit(textsurface, (SIZEX//10, SIZEY//3))
-    if state.state == STATE_LOGIN_PASSWORD:
+    """
+    Call at each frame, display text over terminal
+    :return:
+    """
+    def print_text(text):
+        # TODO : multiline print text
+        textsurface = myfont.render(text, True, (255, 255, 255))
+        screen.blit(textsurface, (SIZEX // 10, SIZEY // 3))
+
+    if state.question_system.is_question(state.state):
+        text = state.question_system.questions[state.state]['text']
+        print_text(text)
+    elif state.state == STATE_LOGIN_USER:
+        print_text("Connecte toi au stand 2020:BattlemytheOdyssey sur battlemythe et appuie sur ENTREE quand tu es prêt")
+    elif state.state == STATE_LOGIN_PASSWORD:
+        print_text("Password")
         textsurface = myfont.render('Password :', True, (255, 255, 255))
         screen.blit(textsurface, (SIZEX//10, SIZEY//3))
-    pass
+
+
+def update_state():
+    """
+    Called each frame : To deal with State that expires with time
+    :return:
+    """
+
+    if state.state == STATE_INTRO:
+        if DEBUG_QUESTION:
+            state.text_programer.reset()
+            state.mark_time = 0
+            state.set_state(QUESTION1)
+
+        elif (pygame.time.get_ticks() - state.mark_time) > sum([5, 6, 18, 22, 23, 20, 20, 30]) * TICK_CONSTANT:
+            state.set_state(QUESTION1)
+            state.mark_time = 0
 
 def send_text(text):
+    """
+    Called each time you press enter
+    :param text:
+    :return:
+    """
+    if not state.question_system.is_question(state.state) and not state.state == STATE_LOGIN_USER:
+        return
+
+    if state.question_system.is_question(state.state):
+        state_result = state.question_system.check_answer(state.state, text)
+        state.set_state(state_result)
+
 
     if state.state == STATE_LOGIN_USER:
-        state.set_state(STATE_LOGIN_PASSWORD, user=text)
-    elif state.state == STATE_LOGIN_PASSWORD:
-        # SEND LOGIN PASSWORD TO API
-        success = True
-        if not success:
-            state.set_state(STATE_LOGIN_USER)
-        else:
-            make_get_request('start')
-            # Replace by introduction text
-            make_post_request('say', text=f"Bonjour {state.data['user']}", delay=2)
-            state.set_state(STATE_INTRO)
-    elif state.state == STATE_INTRO:
-        make_post_request('say', text=text)
+        state.set_state(STATE_INTRO, user=text)
+        state.mark_time = pygame.time.get_ticks()
+        make_get_request('start')
+        user = state.data['user']
+        state.program([f"Bienvenu {user}.",
+                       "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, mon créateur, à ton service !",
+                       "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques merveilleuses, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
+                       "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un tissu corporel humanoïde volontairement, après tout c'est Kévin qui m'a codée :)",
+                       f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, et ça c'est  toi {text} !",
+                       f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif, pas dangereux, innocent, n'ait pas peur {text} !",
+                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur. Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère !"
+                       ],
+                      [5, 6, 18, 22, 28, 20, 20])
 
 def display_console():
+    """
+    Called at each time and
+    :return:
+    """
     global text
+
+    if not state.question_system.is_question(state.state) and not state.state == STATE_LOGIN_USER:
+        return
 
     time = (pygame.time.get_ticks() / 3000.0) % 1
     time = math.sin(time * 2 * math.pi) ** 2
@@ -127,17 +397,26 @@ def display_console():
 
     screen.blit(textinput.get_surface(), (SIZEX // 7, SIZEY // 2))
 
-
 def main_loop(events):
     pygame.draw.rect(screen, (0, 0, 0), (0, 0, SIZEX, SIZEY))
 
+    update_state()
     display_text()
     display_console()
+    state.update()
 
-    if state == STATE_LOGIN_USER:
+
+    if state.state == STATE_LOGIN_USER:
         pass
 
-
+    if state.state == STATE_WINDOWS_POPUP:
+        # DISPLAY popup and intercept click
+        width = SIZEX//4
+        height = SIZEY//8
+        start_x = SIZEX // 2 - width // 2
+        start_y = SIZEY // 2 - height // 2
+        pygame.draw.rect(screen, (100, 100, 100), (start_x, start_y, width, height))
+        pass
 
     pygame.display.flip()
     clock.tick(60)

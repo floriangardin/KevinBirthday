@@ -15,6 +15,7 @@ def main():
 
 @app.route("/say", methods = ['POST'])
 def main_say():
+    state.state = STATE_MAIN
     if request.method == 'POST':
         text = request.json['text']
         delay = request.json['delay'] if 'delay' in request.json else 0

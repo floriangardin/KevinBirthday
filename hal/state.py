@@ -10,19 +10,6 @@ pygame.font.init() # you have to call this at the start,
 start_time = pygame.time.get_ticks()
 
 FULLSCREEN = False
-WHITE_NOISE_DURATION = 1000
-STATE_WAIT_TO_START = 'WAIT_TO_START'
-STATE_WHITE_NOISE = 'WHITE_NOISE'
-STATE_MAIN = 'MAIN'
-imgs_gilles = [pygame.image.load(image) for image in glob.glob("./assets/hal/*gif")]
-gilles_size_x, gilles_size_y = imgs_gilles[0].get_size()
-music_gilles = pygame.mixer_music.load('./assets/music/main_music.ogg')
-white_noise = pygame.mixer_music.load('./assets/music/white_noise.ogg')
-clock = pygame.time.Clock()
-
-myfont = pygame.font.SysFont('Lucida console', 35)
-white = (255, 255, 255)
-
 if FULLSCREEN:
     infoObject = pygame.display.Info()
     SIZEX = infoObject.current_w
@@ -33,10 +20,27 @@ else:
     SIZEY = 800
     screen = pygame.display.set_mode((SIZEX, SIZEY))
 
+WHITE_NOISE_DURATION = 1000
+STATE_WAIT_TO_START = 'WAIT_TO_START'
+STATE_WHITE_NOISE = 'WHITE_NOISE'
+STATE_MAIN = 'MAIN'
+imgs_gilles = [pygame.image.load(image) for image in glob.glob("./assets/hal/*gif")]
+imgs_gilles = [pygame.transform.scale(picture, (picture.get_width() * SIZEY//800, picture.get_height() * SIZEY//800)) for picture in imgs_gilles]
+
+gilles_size_x, gilles_size_y = imgs_gilles[0].get_size()
+music_gilles = pygame.mixer_music.load('./assets/music/main_music.ogg')
+white_noise = pygame.mixer_music.load('./assets/music/white_noise.ogg')
+clock = pygame.time.Clock()
+
+myfont = pygame.font.SysFont('Lucida console', 28 * SIZEX // 800)
+white = (255, 255, 255)
+
+
+
 
 class WriterTemp:
 
-    def __init__(self, x, y, font, color,  delay=0, frequency=1000):
+    def __init__(self, x, y, font, color,  delay=0, frequency=1500):
         self.text = ''
         self.delay = delay
         self.current_text = ''
@@ -52,12 +56,12 @@ class WriterTemp:
     def update(self, screen, ticks):
         if self.active:
             nb_char = max(0, (ticks - self.start_time - self.delay) // self.frequency)
-            if (ticks - self.start_time - self.delay) // self.frequency > len(self.text) + 10:
-                self.clear()
+            # if (ticks - self.start_time - self.delay) // self.frequency > len(self.text) + 10:
+            #     self.clear()
             self.current_text = self.text[0: nb_char]
 
             # ADD LINE RETURN
-            max_size = 30 * SIZEX // 800
+            max_size = 45
             step = SIZEX // 20
             import numpy as np
             texts_temp = self.current_text.split(' ')
@@ -95,7 +99,7 @@ class State:
     def __init__(self, screen):
         self.state = STATE_WAIT_TO_START
         self.start_time_whitenoise = None
-        self.writer = WriterTemp(SIZEX // 5, 3 * SIZEY // 4, myfont, white, delay=0, frequency=100)
+        self.writer = WriterTemp(SIZEX // 6, 3 * SIZEY // 4, myfont, white, delay=0, frequency=75)
         self.screen = screen
 
 
