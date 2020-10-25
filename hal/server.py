@@ -26,4 +26,25 @@ def main_say():
         return make_response()
 
 
+@app.route("/music", methods = ['POST'])
+def main_music():
+    if request.method == 'POST':
+        music = request.json['music']
+        pygame.mixer_music.stop()
+        if music in musics.keys():
+            music = musics[music]
+            pygame.mixer_music.load(music)
+        pygame.mixer_music.play(loops=1)
+        return make_response()
+
+
+@app.route("/sound", methods=['POST'])
+def main_sound():
+    if request.method == 'POST':
+        sound = request.json['sound']
+        if sound in sounds.keys():
+            sound = sounds[sound]
+            sound.play()
+        return make_response()
+
 threading.Thread(target=app.run, kwargs=dict(host='0.0.0.0', port=5000)).start()

@@ -6,8 +6,15 @@ pygame.init()
 pygame.font.init() # you have to call this at the start,
                    # if you want to use this module.
 
-
 start_time = pygame.time.get_ticks()
+
+sounds = {
+    'white_noise': pygame.mixer.Sound('./assets/music/white_noise.ogg')
+}
+musics = {
+    'noise': './assets/music/white_noise',
+    'main': './assets/music/main_music.ogg'
+}
 
 FULLSCREEN = False
 if FULLSCREEN:
@@ -32,7 +39,7 @@ music_gilles = pygame.mixer_music.load('./assets/music/main_music.ogg')
 white_noise = pygame.mixer_music.load('./assets/music/white_noise.ogg')
 clock = pygame.time.Clock()
 
-myfont = pygame.font.SysFont('Lucida console', 28 * SIZEX // 800)
+myfont = pygame.font.SysFont('Lucida console', 25 * SIZEX // 800)
 white = (255, 255, 255)
 
 
@@ -62,7 +69,7 @@ class WriterTemp:
 
             # ADD LINE RETURN
             max_size = 45
-            step = SIZEX // 20
+            step = SIZEX // 30
             import numpy as np
             texts_temp = self.current_text.split(' ')
             texts = []

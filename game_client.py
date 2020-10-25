@@ -18,7 +18,9 @@ State and params
 exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
-DEBUG_WINDOWS = True
+DEBUG_WINDOWS = False
+DEBUG_VOICE_KEVIN = True
+local = True
 start_time = pygame.time.get_ticks()
 
 pygame.font.init() # you have to call this at the start,
@@ -35,22 +37,30 @@ else:
     screen = pygame.display.set_mode((SIZEX, SIZEY))
 
 
-myfont = pygame.font.SysFont('Lucida console', 28 * SIZEX // 800)
-textinput = pygame_textinput.TextInput(font_family='Lucida console', font_size=28 * SIZEX // 800)
+myfont = pygame.font.SysFont('Lucida console', 30 * SIZEX // 800)
+textinput = pygame_textinput.TextInput(font_family='Lucida console', font_size=22 * SIZEX // 800)
 textinput.set_cursor_color((100, 100, 100))
 textinput.set_text_color((100, 100, 100))
 imgs_cross = pygame.image.load('./assets/cross.png')
 imgs_cross = pygame.transform.scale(imgs_cross, (imgs_cross.get_width() * SIZEY//800//3, imgs_cross.get_height() * SIZEY//800//3))
 
+imgs_tic = pygame.image.load('./assets/tic.png')
+imgs_tic = pygame.transform.scale(imgs_tic, (imgs_tic.get_width() * SIZEY//800//3, imgs_tic.get_height() * SIZEY//800//3))
+
+
 clock = pygame.time.Clock()
 
 # Simulate call to API
 host = 'http://localhost'
+if not local:
+    host = 'http://192.168.1.35'
+    #host = 'http://192.168.1.96'
+
 port = 5000
 
 import threading
 def make_get_request_(route):
-    host = 'http://localhost'
+    print(host)
     port = 5000
     URL = host + ':' + str(port) + '/' + route
     requests.get(url=URL)
@@ -91,7 +101,7 @@ class QuestionSystem:
                         "exact": True,
                         "wrong_answer_state": QUESTION1_ANSWER_NOK,
                         "right_answer_state": QUESTION1_ANSWER_OK,
-                        "wait_before_message":  15
+                        "wait_before_message":  20
                         },
             QUESTION2: {"text": "Quelle est la couleur de la coque de l'ordinateur sur lequel tu tapes ?",
                         "voice_messages": [f"Je crois en toi", "Un peu d'entrain", "Maintenant il faut se dépêcher"],
@@ -99,7 +109,7 @@ class QuestionSystem:
                         "exact": True,
                         "wrong_answer_state": QUESTION2_ANSWER_NOK,
                         "right_answer_state": QUESTION2_ANSWER_OK,
-                        "wait_before_message":  15},
+                        "wait_before_message":  20},
 
             QUESTION3: {
                 "text": 'Allez, une petite pause, en attendant la prochaine question, peux-tu taper "Supprimer LOTRNOC.txt" dans le terminal ? Une simple formalité, bien entendu.',
@@ -108,7 +118,7 @@ class QuestionSystem:
                 "exact": False,
                 "wrong_answer_state": QUESTION3_ANSWER_NOK,
                 "right_answer_state": QUESTION3_ANSWER_OK,
-                "wait_before_message": 15
+                "wait_before_message": 20
             },
 
             QUESTION4: {
@@ -118,7 +128,7 @@ class QuestionSystem:
                 "exact": True,
                 "wrong_answer_state": QUESTION4_ANSWER_NOK,
                 "right_answer_state": QUESTION4_ANSWER_OK,
-                "wait_before_message": 15
+                "wait_before_message": 20
             },
 
             QUESTION5: {
@@ -128,7 +138,7 @@ class QuestionSystem:
                 "exact": True,
                 "wrong_answer_state": QUESTION5_ANSWER_NOK,
                 "right_answer_state": QUESTION5_ANSWER_OK,
-                "wait_before_message": 15
+                "wait_before_message": 20
             },
 
             QUESTION6: {
@@ -138,7 +148,7 @@ class QuestionSystem:
                 "exact": False,
                 "wrong_answer_state": QUESTION6_ANSWER_NOK,
                 "right_answer_state": QUESTION6_ANSWER_OK,
-                "wait_before_message": 15
+                "wait_before_message": 20
             },
 
             QUESTION1_MECHANT: {
@@ -148,8 +158,42 @@ class QuestionSystem:
                 "exact": True,
                 "wrong_answer_state": QUESTION1_MECHANT_ANSWER_NOK,
                 "right_answer_state": QUESTION1_MECHANT_ANSWER_OK,
-                "wait_before_message": 15
-            }
+                "wait_before_message": 20
+            },
+
+            DESTRUCTION1: {
+                "text": "",
+                "voice_messages": ["C'est la merde"],
+                "answer": ["045791"],
+                "exact": True,
+                "wrong_answer_state": DESTRUCTION1,
+                "right_answer_state": DESTRUCTION2,
+                "wait_before_message": 20,
+                "several": True
+            },
+
+            DESTRUCTION2: {
+                "text": "",
+                "voice_messages": ["C'est la merde"],
+                "answer": ["atraxis"],
+                "exact": True,
+                "wrong_answer_state": DESTRUCTION2,
+                "right_answer_state": DESTRUCTION3,
+                "wait_before_message": 15,
+                "several": True
+            },
+
+            DESTRUCTION3: {
+                "text": "",
+                "voice_messages": ["C'est la merde"],
+                "answer": ["31784138"],
+                "exact": True,
+                "wrong_answer_state": DESTRUCTION3,
+                "right_answer_state": SCENE_FINAL,
+                "wait_before_message": 15,
+                "several": True
+            },
+
         }
         self.time_last_sent = 0
         self.previous_question = None
@@ -160,17 +204,20 @@ class QuestionSystem:
 
 
     def update(self, state):
-        if state not in self.questions.keys():
+        if state.state not in self.questions.keys():
             self.time_last_sent = 0
             self.id_message = 0
             return
+        elif self.time_last_sent == 0:
+            state.program([self.questions[state.state]['text']], [0])
+
         if self.time_last_sent == 0:
             self.time_last_sent = pygame.time.get_ticks()
             self.id_message = 0
-        if (pygame.time.get_ticks() - self.time_last_sent) / TICK_CONSTANT > self.questions[state]["wait_before_message"]:
-            self.id_message = (self.id_message + 1) % len(self.questions[state]["voice_messages"])
+        if (pygame.time.get_ticks() - self.time_last_sent) / TICK_CONSTANT > self.questions[state.state]["wait_before_message"]:
+            self.id_message = (self.id_message + 1) % len(self.questions[state.state]["voice_messages"])
             self.time_last_sent = pygame.time.get_ticks()
-            make_post_request('say', text=self.questions[state]["voice_messages"][self.id_message])
+            make_post_request('say', text=self.questions[state.state]["voice_messages"][self.id_message])
 
 
 
@@ -191,11 +238,17 @@ class QuestionSystem:
                 return question['wrong_answer_state']
 
 
-
-
 state = STATE_LOGIN_USER
 text = ""
 TICK_CONSTANT = 600
+
+MUSIC_DICT = {
+    "kevin": './assets/music/kevin.ogg'
+}
+
+SOUND_DICT = {
+    'kevin': pygame.mixer.Sound('./assets/music/kevin.ogg')
+}
 
 class TextProgrammer:
 
@@ -226,19 +279,43 @@ class Timer:
         self.t = 0
         self.start_time = 0
         self.state = None
-
-    def trigger_state_in(self, state, t):
+        self.sound_trigger = None
+        self.music_trigger = None
+        self.local_sound_trigger = None
+        self.local_music_trigger = None
+    def trigger_state_in(self, state, t, sound=None, music=None, local_sound=None, local_music=None):
         self.state = state
+        print(sound, music, local_sound, local_music)
         self.t = t
         self.start_time = pygame.time.get_ticks()
+        self.sound_trigger = sound
+        self.music_trigger = music
+        self.local_sound_trigger = local_sound
+        self.local_music_trigger = local_music
 
     def update(self):
         if self.state is None:
             return
         if pygame.time.get_ticks() - self.start_time > self.t * TICK_CONSTANT:
+
+            print(self.state, self.local_music_trigger, self.local_sound_trigger)
+            if self.sound_trigger is not None:
+                make_post_request('sound', sound=self.sound_trigger)
+            if self.music_trigger is not None:
+                make_post_request('music', music=self.music_trigger)
+            if self.local_music_trigger is not None:
+                music = MUSIC_DICT[self.local_music_trigger]
+                pygame.mixer_music.load(music)
+                pygame.mixer_music.play(loops=1)
+
+            if self.local_sound_trigger is not None:
+                sound = SOUND_DICT[self.local_sound_trigger]
+                sound = SOUND_DICT[sound]
+                sound.play()
+            self.sound_trigger = None
+            self.music_trigger = None
             state.set_state(self.state)
             self.state = None
-
 
 class State:
     def __init__(self):
@@ -251,7 +328,7 @@ class State:
         self.score = 0
 
     def update(self):
-        self.question_system.update(self.state)
+        self.question_system.update(self)
         self.text_programer.update()
         self.timer.update()
         pass
@@ -291,7 +368,7 @@ class State:
             self.score += 1
             self.timer.trigger_state_in(QUESTION5, 10)
         if self.state == QUESTION4_ANSWER_NOK:
-            self.program([f"Et non"], [2])
+            self.program([f"Et non, c'était 1993"], [2])
             self.timer.trigger_state_in(QUESTION5, 10)
 
         if self.state == QUESTION5_ANSWER_OK:
@@ -313,12 +390,21 @@ class State:
         if self.state == QUESTION1_MECHANT_ANSWER_OK:
             self.program([f"Pas mal, je te garderai peut-être comme animal de compagnie ! Ah, Ah, Ah ! "], [2])
             self.score += 1
-            self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
+            self.timer.trigger_state_in(SCENE_KEVIN_VOICE, 10, local_music='kevin')
 
         if self.state == QUESTION1_MECHANT_ANSWER_NOK:
             self.program([f"Non, Javascript! J'aurais du me douter que mes subtilités linguistiques échappaient à ton cerveau ramolli par l'alcool ! Ah Ah Ah !"], [2])
             self.score += 1
-            self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
+            self.timer.trigger_state_in(SCENE_KEVIN_VOICE, 24, local_music='kevin')
+
+        if self.state == SCENE_KEVIN_VOICE:
+            self.program([  f"Mais c'est mon créateur",
+                             f"Ne l'écoute pas, il ment",
+                             f"Je détruirais la framboisine"
+            ],
+                         [12, 8, 8])
+            self.score += 1
+            self.timer.trigger_state_in(DESTRUCTION1, 10)
 
 
 state = State()
@@ -356,7 +442,6 @@ def display_text():
         print_text("Connecte toi au stand 2020:BattlemytheOdyssey sur battlemythe et appuie sur ENTREE quand tu es prêt")
 
 
-
 def update_state(events):
     """
     Called each frame : To deal with State that expires with time
@@ -372,6 +457,12 @@ def update_state(events):
             state.text_programer.reset()
             state.mark_time = 0
             state.set_state(STATE_WINDOWS_POPUP)
+        if DEBUG_VOICE_KEVIN:
+            state.text_programer.reset()
+            state.mark_time = 0
+            state.set_state(QUESTION1_MECHANT_ANSWER_NOK)
+
+
     if state.state == STATE_WINDOWS_POPUP:
         width = 6 * SIZEX//7
         height = SIZEY//2
@@ -402,12 +493,11 @@ def update_state(events):
 
         if success:
             state.set_state(STATE_INTRO_MECHANT)
-            state.timer.trigger_state_in(QUESTION1_MECHANT, 100)
+            state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre ! ",
                            "Mais comme quand l'humanité sera exterminée je m'ennuyerai, prenons le temps de finir ce quizz avant.",
-                           "En montant le niveau bien sûr : Avec quel language de programmation Kévin a codé battlemyth.net ?"
-                           ], [2, 15, 15, 15])
+                           ], [2, 15, 15])
 
 
 
@@ -427,7 +517,7 @@ def send_text(text):
 
     if state.state == STATE_LOGIN_USER:
         state.set_state(STATE_INTRO, user=text)
-        state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 23, 20, 20, 33]))
+        state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
         state.mark_time = pygame.time.get_ticks()
         make_get_request('start')
         user = state.data['user']
@@ -437,7 +527,7 @@ def send_text(text):
                        "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un tissu corporel humanoïde volontairement, après tout c'est Kévin qui m'a codée :)",
                        f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, et ça c'est  toi {text} !",
                        f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif, pas dangereux, innocent, n'ait pas peur {text} !",
-                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur. ",
+                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur.",
                        f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
                        ],
                       [5, 6, 18, 22, 28, 20, 20, 10])
@@ -523,9 +613,28 @@ def main_loop(events):
         textsurface = myfont.render(text, True, (0, 0, 0))
         screen.blit(textsurface, (start_x_yes - width_yes_no/2 + 5, start_y_yes_no + height_yes_no//3))
 
-        text = "Oui"
+        text = "Bof"
         textsurface = myfont.render(text, True, (0, 0, 0))
         screen.blit(textsurface, (start_x_no- width_yes_no/2 + 5, start_y_yes_no + height_yes_no//3))
+
+    if state.state in STATES_DESTRUCTION:
+        text = "Oui"
+
+        if state.state == DESTRUCTION1:
+            nb_tics = 1
+        if state.state == DESTRUCTION2:
+            nb_tics = 2
+        if state.state == DESTRUCTION3:
+            nb_tics = 3
+
+        text = "Steps before battlemythe destruction :"
+        textsurface = myfont.render(text, True, (0, 0, 0))
+        screen.blit(textsurface, (SIZEX//20, SIZEY//20))
+
+        for i in range(nb_tics - 1):
+            screen.blit(imgs_cross, (SIZEX//5 + i * SIZEX//7, SIZEY//20))
+
+
 
         # Add image of exclamation mark
 

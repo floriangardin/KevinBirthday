@@ -46,14 +46,21 @@ QUESTION1_MECHANT = "question1_mechant"
 QUESTION1_MECHANT_ANSWER_NOK = "question1_mechant_nok"
 QUESTION1_MECHANT_ANSWER_OK = "question1_mechant_ok"
 
+
+SCENE_KEVIN_VOICE = "scene_kevin_voice"
+
 QUESTION2_MECHANT = "question2_mechant"
 QUESTION2_MECHANT_ANSWER_NOK = "question2_mechant_nok"
 QUESTION2_MECHANT_ANSWER_OK = "question2_mechant_ok"
+
+
 
 MESSAGE_VOCAL = "message_vocal"
 DESTRUCTION1 = "destruction1"
 DESTRUCTION2 = "destruction2"
 DESTRUCTION3 = "destruction3"
+
+STATES_DESTRUCTION = [DESTRUCTION1, DESTRUCTION2, DESTRUCTION3]
 
 SCENE_FINAL = "scene_final"
 RANGEMENT = "rangement" # Texte de rangement puis appuyer sur entrée quand c'est fait + envoi du score
