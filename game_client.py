@@ -142,10 +142,10 @@ class QuestionSystem:
             },
 
             QUESTION1_MECHANT: {
-                "text": "Avec quel language de programmation Kévin a codé battlemyth.net ?",
+                "text": "Quand il en fait, quel sport affectionne Kévin ?",
                 "voice_messages": ["Mes pouvoirs sont infinis", "Tu n'es rien à côté de ma puissance", "Philippe !"],
-                "answer": ["javascript"],
-                "exact": True,
+                "answer": ["boire","po","judo","badminton","parcours d'obstacles","parcours d'obstacle"],
+                "exact": False,
                 "wrong_answer_state": QUESTION1_MECHANT_ANSWER_NOK,
                 "right_answer_state": QUESTION1_MECHANT_ANSWER_OK,
                 "wait_before_message": 15
@@ -316,7 +316,7 @@ class State:
             self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
 
         if self.state == QUESTION1_MECHANT_ANSWER_NOK:
-            self.program([f"Non, Javascript! J'aurais du me douter que mes subtilités linguistiques échappaient à ton cerveau ramolli par l'alcool ! Ah Ah Ah !"], [2])
+            self.program([f"Non, il y avait le choix pourtant! J'aurais du me douter que ses subtilités athlétiques échappaient à ton cerveau ramolli par l'alcool !"], [2])
             self.score += 1
             self.timer.trigger_state_in(QUESTION2_MECHANT, 10)
 
