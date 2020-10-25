@@ -287,7 +287,7 @@ class State:
             self.timer.trigger_state_in(QUESTION3, 10)
 
         if self.state == QUESTION4_ANSWER_OK:
-            self.program([f"Ton intellect est l'apanage des plus grands humains, quelle personne merveilleuse tu es !"], [2])
+            self.program([f"Ton intellect est l'apanage des plus grands humains, tu es incroyable !"], [2])
             self.score += 1
             self.timer.trigger_state_in(QUESTION5, 10)
         if self.state == QUESTION4_ANSWER_NOK:
@@ -307,7 +307,7 @@ class State:
             self.score += 1
             self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
         if self.state == QUESTION6_ANSWER_NOK:
-            self.program([f"Allons, n'ait pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
+            self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
             self.timer.trigger_state_in(QUESTION5, 10)
 
         if self.state == QUESTION1_MECHANT_ANSWER_OK:
@@ -405,8 +405,8 @@ def update_state(events):
             state.timer.trigger_state_in(QUESTION1_MECHANT, 100)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre ! ",
-                           "Mais comme quand l'humanité sera exterminée je m'ennuyerai, prenons le temps de finir ce quizz avant.",
-                           "En montant le niveau bien sûr : Avec quel language de programmation Kévin a codé battlemyth.net ?"
+                           "Mais comme quand l'humanité sera exterminée je m'ennuierai, prenons le temps de finir ce quizz avant.",
+                           "En montant le niveau : Avec quel language de programmation Kévin a codé battlemyth.net ?"
                            ], [2, 15, 15, 15])
 
 
@@ -432,12 +432,12 @@ def send_text(text):
         make_get_request('start')
         user = state.data['user']
         state.program([f"Bienvenu {user}.",
-                       "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, mon créateur, à ton service !",
-                       "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques merveilleuses, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
-                       "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un tissu corporel humanoïde volontairement, après tout c'est Kévin qui m'a codée :)",
-                       f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, et ça c'est  toi {text} !",
-                       f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif, pas dangereux, innocent, n'ait pas peur {text} !",
-                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur. ",
+                       "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
+                       "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
+                       "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
+                       f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
+                       f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
+                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
                        f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
                        ],
                       [5, 6, 18, 22, 28, 20, 20, 10])
