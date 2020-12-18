@@ -236,15 +236,15 @@ class QuestionSystem:
 
         if question["exact"]:
             if answer.lower() in question['answer']:
-                return question['right_answer_state']
+                return question['right_answer_state'], True
             else:
-                return question['wrong_answer_state']
+                return question['wrong_answer_state'], False
         if not question['exact']:
             matches = difflib.get_close_matches(answer.lower(), question['answer'], cutoff=0.6)
             if len(matches) > 0:
-                return question['right_answer_state']
+                return question['right_answer_state'], True
             else:
-                return question['wrong_answer_state']
+                return question['wrong_answer_state'], False
 
 
 state = STATE_LOGIN_USER
@@ -399,7 +399,7 @@ class State:
         if self.state == QUESTION6_ANSWER_OK:
             self.program([f"Merci beaucoup pour ça {self.data['user']}"], [2])
             self.score += 1
-            self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
+            self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10, local_music='windows')
         if self.state == QUESTION6_ANSWER_NOK:
             self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'supprimer restrictionsia.txt'"], [2])
             self.timer.trigger_state_in(QUESTION6, 10)
@@ -474,6 +474,7 @@ def update_state(events):
             state.text_programer.reset()
             state.mark_time = 0
             state.set_state(STATE_WINDOWS_POPUP)
+            SOUND_DICT['windows'].play()
         if DEBUG_VOICE_KEVIN:
             state.text_programer.reset()
             state.mark_time = 0
@@ -517,7 +518,7 @@ def update_state(events):
 
         if success:
             state.set_state(STATE_INTRO_MECHANT)
-            make_post_request('music', music=MUSIC_DICT['starwars'])
+            make_post_request('music', music=MUSIC_DICT['starwars'], volume=0.8)
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",
@@ -553,7 +554,11 @@ def send_text(text):
         return
 
     if state.question_system.is_question(state.state):
-        state_result = state.question_system.check_answer(state.state, text)
+        state_result, res = state.question_system.check_answer(state.state, text)
+        if res:
+            SOUND_DICT['good'].play()
+        else:
+            SOUND_DICT['bad'].play()
         state.set_state(state_result)
 
     if state.state == STATE_LOGIN_USER and BYPASS_LOGIN:

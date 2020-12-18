@@ -30,9 +30,10 @@ def main_say():
 def main_music():
     if request.method == 'POST':
         music = request.json['music']
+        volume = request.json['volume'] if 'volume' in request.json else 1.0
         pygame.mixer_music.stop()
         pygame.mixer_music.load(music)
-        pygame.mixer_music.play(loops=1)
+        pygame.mixer_music.play(loops=1, volume=volume)
         return make_response()
 
 
