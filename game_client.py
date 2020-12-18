@@ -256,7 +256,8 @@ MUSIC_DICT = {
     "kevin": './assets/music/kevin.ogg',
     "diesirae": "./assets/music/diesirae.ogg",
     "doom": "./assets/music/Doom-Eternal-OST-The-Only-Thing-they-Fear-is-You-_Mick-Gordon_.ogg",
-    "starwars": "./assets/music/Star-Wars-Droid-Army-Theme.ogg"
+    "starwars": "./assets/music/Star-Wars-Droid-Army-Theme.ogg",
+    "qvgdm": "./assets/music/qvgdm.ogg"
 }
 
 SOUND_DICT = {
@@ -291,6 +292,34 @@ class TextProgrammer:
         self.start_time = pygame.time.get_ticks()
 
 
+class Clock:
+
+    def __init__(self):
+        self.total_time = 60 * 5
+        self.remaining_time = self.total_time
+        self.start_time = None
+
+    def reset(self):
+        self.remaining_time = self.total_time
+        self.start_time = None
+
+    def start(self):
+        ticks = pygame.time.get_ticks()
+        self.start_time = ticks
+
+    def update(self):
+        if self.start_time is not None:
+            ticks = pygame.time.get_ticks()
+            self.remaining_time = self.total_time + (self.start_time - ticks)/1000
+
+    def print(self):
+        minutes = self.remaining_time // 60
+        seconds = str(self.remaining_time % 60).zfill(2)
+        return f"{minutes}:{seconds}"
+
+    def is_finished(self):
+        pass
+
 class Timer:
 
     def __init__(self):
@@ -301,6 +330,16 @@ class Timer:
         self.music_trigger = None
         self.local_sound_trigger = None
         self.local_music_trigger = None
+
+    def reset(self):
+        self.t = 0
+        self.start_time = 0
+        self.state = None
+        self.sound_trigger = None
+        self.music_trigger = None
+        self.local_sound_trigger = None
+        self.local_music_trigger = None
+
     def trigger_state_in(self, state, t, sound=None, music=None, local_sound=None, local_music=None):
         self.state = state
         print(sound, music, local_sound, local_music)
@@ -344,11 +383,18 @@ class State:
         self.text_programer = TextProgrammer()
         self.timer = Timer()
         self.score = 0
+        self.clock = Clock()
+
+
+    def reset(self):
+        self.clock.reset()
+        self.timer.reset()
 
     def update(self):
         self.question_system.update(self)
         self.text_programer.update()
         self.timer.update()
+        self.clock.update()
         pass
 
     def program(self, texts, delays):
@@ -423,6 +469,8 @@ class State:
                          [12, 8, 8])
             self.score += 1
             self.timer.trigger_state_in(DESTRUCTION1, 10)
+            self.clock.start()
+
 
 
 state = State()
@@ -452,6 +500,9 @@ def display_text():
             textsurface = myfont.render(text, True, (255, 255, 255))
             screen.blit(textsurface, (SIZEX // 10, SIZEY//3 + step * (idx + 1 - len(texts))))
 
+    if state.state in STATES_DESTRUCTION:
+        text = "Va chercher le manuel qui est dans la pièce, dedans se trouve les instructions pour désactiver battlemythe, tape les réponses dans la console, mais dépêche toi"
+        print_text(text)
 
     if state.question_system.is_question(state.state):
         text = state.question_system.questions[state.state]['text']
@@ -483,7 +534,8 @@ def update_state(events):
         if DEBUG_LAST_PHASE:
             state.text_programer.reset()
             state.mark_time = 0
-            make_post_request("music", music=MUSIC_DICT['qvgdm'])
+            make_post_request("music", music=MUSIC_DICT['doom'])
+            SOUND_DICT['clock'].play(loops=100)
             state.set_state(DESTRUCTION1)
         if DEBUG_END:
             print('GO TO END')
