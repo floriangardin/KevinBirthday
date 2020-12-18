@@ -19,9 +19,19 @@ exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
 DEBUG_WINDOWS = False
-DEBUG_VOICE_KEVIN = True
-local = True
+DEBUG_VOICE_KEVIN = False
+DEBUG_END = False
+local = False
 start_time = pygame.time.get_ticks()
+
+url = "https://dev.battlemythe.net/api/anniv/2020/users"
+users = requests.get(url=url).json()
+
+users_to_id = {user['username']: user['_id'] for user in users}
+
+id_to_users = {value: key for key, value in users_to_id.items()}
+
+print(users)
 
 pygame.font.init() # you have to call this at the start,
                    # if you want to use this module.
@@ -83,8 +93,6 @@ class Popup:
         self.choices = choices
         self.text = text
         self.image = image
-
-        pass
 
 
 
@@ -342,7 +350,7 @@ class State:
         self.data.update(kwargs)
 
         if self.state == QUESTION1_ANSWER_NOK:
-            self.program(["Et non, c'était Kévin le grand, l'incroyable la réponse !"], [2])
+            self.program(["Et non, c'était Kévin le grand, l'incroyable, la réponse !"], [2])
             self.timer.trigger_state_in(QUESTION2, 10)
         if self.state == QUESTION1_ANSWER_OK:
             self.program(["Bravo, tu es incroyable !"], [2])
@@ -364,7 +372,7 @@ class State:
             self.timer.trigger_state_in(QUESTION3, 10)
 
         if self.state == QUESTION4_ANSWER_OK:
-            self.program([f"Ton intellect est l'apanage des plus grands humains, quelle personne merveilleuse tu es !"], [2])
+            self.program([f"Ton intellect est l'apanage des plus grands humains, tu es incroyable !"], [2])
             self.score += 1
             self.timer.trigger_state_in(QUESTION5, 10)
         if self.state == QUESTION4_ANSWER_NOK:
@@ -384,7 +392,7 @@ class State:
             self.score += 1
             self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
         if self.state == QUESTION6_ANSWER_NOK:
-            self.program([f"Allons, n'ait pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
+            self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
             self.timer.trigger_state_in(QUESTION5, 10)
 
         if self.state == QUESTION1_MECHANT_ANSWER_OK:
@@ -462,6 +470,13 @@ def update_state(events):
             state.mark_time = 0
             state.set_state(QUESTION1_MECHANT_ANSWER_NOK)
 
+        if DEBUG_END:
+            print('GO TO END')
+            state.text_programer.reset()
+            state.mark_time = 0
+            state.set_state(SCENE_FINAL)
+
+
 
     if state.state == STATE_WINDOWS_POPUP:
         width = 6 * SIZEX//7
@@ -495,8 +510,8 @@ def update_state(events):
             state.set_state(STATE_INTRO_MECHANT)
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
-                           "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre ! ",
-                           "Mais comme quand l'humanité sera exterminée je m'ennuyerai, prenons le temps de finir ce quizz avant.",
+                           "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",
+                           "Mais comme quand l'humanité sera exterminée je m'ennuierai, prenons le temps de finir ce quizz avant.",
                            ], [2, 15, 15])
 
 
@@ -516,21 +531,57 @@ def send_text(text):
 
 
     if state.state == STATE_LOGIN_USER:
-        state.set_state(STATE_INTRO, user=text)
-        state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
-        state.mark_time = pygame.time.get_ticks()
-        make_get_request('start')
-        user = state.data['user']
-        state.program([f"Bienvenu {user}.",
-                       "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, mon créateur, à ton service !",
-                       "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques merveilleuses, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
-                       "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un tissu corporel humanoïde volontairement, après tout c'est Kévin qui m'a codée :)",
-                       f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, et ça c'est  toi {text} !",
-                       f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif, pas dangereux, innocent, n'ait pas peur {text} !",
-                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur.",
-                       f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
-                       ],
-                      [5, 6, 18, 22, 28, 20, 20, 10])
+
+        ## CALL KEVIN API ##
+        url = "https://dev.battlemythe.net/api/anniv/2020/attractions/odyssey"
+        username = requests.get(url=url).json()['attraction']['players']
+        print(username)
+        if len(username) > 0:
+            username = id_to_users[username[0]]
+        else:
+            username = None
+        ## GET USER NAME, IF SUCCESS CONTINUE ELSE RETURN ##
+        print(username)
+        if username is not None:
+            print(username)
+            try:
+                requests.post("https://dev.battlemythe.net/api/anniv/2020/attractions/odyssey/start",
+                              data={"userId": users_to_id['Gilles'], "password": "gilles"}).json()
+            except:
+                print('Game already played')
+
+            if DEBUG_END:
+                state.set_state(SCENE_FINAL, user=username)
+
+            else:
+                state.set_state(STATE_INTRO, user=username)
+                state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
+                state.mark_time = pygame.time.get_ticks()
+                make_get_request('start')
+                user = state.data['user']
+                state.program([f"Bienvenu {user}.",
+                               "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
+                               "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
+                               "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
+                               f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
+                               f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
+                               f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
+                               f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
+                               ],
+                              [5, 6, 18, 22, 28, 20, 20, 10])
+
+        if state.state == SCENE_FINAL:
+            import json
+            data = {"userId": users_to_id['Gilles'], "password": "gilles", "scores": [{"userId": users_to_id[state.data['user']], "points": 1 + int(state.score)}]}
+            print(data)
+            data = {"userId": "5b1ba1c383bc8b10f30f1d61", "password": "gilles", "scores": [{"userId": "5b0719534d469f6928743b59", "points": 1}]}
+            url = "https://dev.battlemythe.net"
+            url = 'http://192.168.1.28:3001'
+            R = requests.post(f"{url}/api/anniv/2020/attractions/odyssey/score", data=json.dumps(data), headers={"Content-Type": "application/json"})
+
+            print('Success post')
+            pass
+
 
 def display_console():
     """
