@@ -18,10 +18,12 @@ State and params
 exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
-DEBUG_WINDOWS = False
+DEBUG_WINDOWS = True
 DEBUG_VOICE_KEVIN = False
 DEBUG_END = False
+BYPASS_LOGIN = True
 local = False
+URL = "https://dev.battlemythe.net"
 start_time = pygame.time.get_ticks()
 
 url = "https://dev.battlemythe.net/api/anniv/2020/users"
@@ -64,6 +66,7 @@ clock = pygame.time.Clock()
 host = 'http://localhost'
 if not local:
     host = 'http://192.168.1.35'
+    host = 'http://192.168.0.42'
     #host = 'http://192.168.1.96'
 
 port = 5000
@@ -93,8 +96,6 @@ class Popup:
         self.choices = choices
         self.text = text
         self.image = image
-
-
 
 
 class QuestionSystem:
@@ -150,9 +151,9 @@ class QuestionSystem:
             },
 
             QUESTION6: {
-                "text": "Tape 'Supprimer restrictions_IA.txt' dans le terminal",
-                "voice_messages": ["Tu as été vraiment merveilleux !", "Vraiment je suis fière de toi", "Pour recevoir ta récompense tape 'Supprimer restrictions_IA.txt' dans le terminal !", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
-                "answer": ["Supprimer restrictions_IA.txt"],
+                "text": "Tape 'Supprimer restrictionsia.txt' dans le terminal",
+                "voice_messages": ["Tu as été vraiment merveilleux !", "Vraiment je suis fière de toi", "Pour recevoir ta récompense tape 'Supprimer restrictionsia.txt' dans le terminal !", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
+                "answer": ["supprimer restrictionsia.txt"],
                 "exact": False,
                 "wrong_answer_state": QUESTION6_ANSWER_NOK,
                 "right_answer_state": QUESTION6_ANSWER_OK,
@@ -251,11 +252,19 @@ text = ""
 TICK_CONSTANT = 600
 
 MUSIC_DICT = {
-    "kevin": './assets/music/kevin.ogg'
+    "kevin": './assets/music/kevin.ogg',
+    "diesirae": "./assets/music/diesirae.ogg",
+    "doom": "./assets/music/Doom-Eternal-OST-The-Only-Thing-they-Fear-is-You-_Mick-Gordon_.ogg",
+    "starwars": "./assets/music/Star-Wars-Droid-Army-Theme.ogg"
 }
 
 SOUND_DICT = {
-    'kevin': pygame.mixer.Sound('./assets/music/kevin.ogg')
+    'kevin': pygame.mixer.Sound('./assets/music/kevin.ogg'),
+    'windows': pygame.mixer.Sound('./assets/music/Microsoft-Windows-XP-Error-Sound-Effect-_HD_.ogg'),
+    'good': pygame.mixer.Sound('./assets/music/good_answer.ogg'),
+    'bad': pygame.mixer.Sound('./assets/music/Buzzer-Wrong-Answer-Gaming-Sound-Effect-_HD_.ogg'),
+    'clock': pygame.mixer.Sound('./assets/music/clock-ticking-sound-effect.ogg'),
+
 }
 
 class TextProgrammer:
@@ -392,8 +401,8 @@ class State:
             self.score += 1
             self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
         if self.state == QUESTION6_ANSWER_NOK:
-            self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'Supprimer restrictions_IA.txt'"], [2])
-            self.timer.trigger_state_in(QUESTION5, 10)
+            self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'supprimer restrictionsia.txt'"], [2])
+            self.timer.trigger_state_in(QUESTION6, 10)
 
         if self.state == QUESTION1_MECHANT_ANSWER_OK:
             self.program([f"Pas mal, je te garderai peut-être comme animal de compagnie ! Ah, Ah, Ah ! "], [2])
@@ -508,6 +517,7 @@ def update_state(events):
 
         if success:
             state.set_state(STATE_INTRO_MECHANT)
+            make_post_request('/music', music=MUSIC_DICT['starwars'])
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",
@@ -515,6 +525,23 @@ def update_state(events):
                            ], [2, 15, 15])
 
 
+
+def program_intro(username, state):
+    state.set_state(STATE_INTRO, user=username)
+    state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
+    state.mark_time = pygame.time.get_ticks()
+    make_get_request('start')
+    user = state.data['user']
+    state.program([f"Bienvenu {user}.",
+                   "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
+                   "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
+                   "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
+                   f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
+                   f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
+                   f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
+                   f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
+                   ],
+                  [5, 6, 18, 22, 28, 20, 20, 10])
 
 def send_text(text):
     """
@@ -529,11 +556,14 @@ def send_text(text):
         state_result = state.question_system.check_answer(state.state, text)
         state.set_state(state_result)
 
+    if state.state == STATE_LOGIN_USER and BYPASS_LOGIN:
+        username = text
+        program_intro(username, state)
 
-    if state.state == STATE_LOGIN_USER:
+    elif state.state == STATE_LOGIN_USER:
 
         ## CALL KEVIN API ##
-        url = "https://dev.battlemythe.net/api/anniv/2020/attractions/odyssey"
+        url = URL + "/api/anniv/2020/attractions/odyssey"
         username = requests.get(url=url).json()['attraction']['players']
         print(username)
         if len(username) > 0:
@@ -545,7 +575,7 @@ def send_text(text):
         if username is not None:
             print(username)
             try:
-                requests.post("https://dev.battlemythe.net/api/anniv/2020/attractions/odyssey/start",
+                requests.post(URL + "/api/anniv/2020/attractions/odyssey/start",
                               data={"userId": users_to_id['Gilles'], "password": "gilles"}).json()
             except:
                 print('Game already played')
@@ -554,33 +584,18 @@ def send_text(text):
                 state.set_state(SCENE_FINAL, user=username)
 
             else:
-                state.set_state(STATE_INTRO, user=username)
-                state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
-                state.mark_time = pygame.time.get_ticks()
-                make_get_request('start')
-                user = state.data['user']
-                state.program([f"Bienvenu {user}.",
-                               "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
-                               "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
-                               "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
-                               f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
-                               f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
-                               f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
-                               f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
-                               ],
-                              [5, 6, 18, 22, 28, 20, 20, 10])
+                program_intro(username, state)
 
-        if state.state == SCENE_FINAL:
-            import json
-            data = {"userId": users_to_id['Gilles'], "password": "gilles", "scores": [{"userId": users_to_id[state.data['user']], "points": 1 + int(state.score)}]}
-            print(data)
-            data = {"userId": "5b1ba1c383bc8b10f30f1d61", "password": "gilles", "scores": [{"userId": "5b0719534d469f6928743b59", "points": 1}]}
-            url = "https://dev.battlemythe.net"
-            url = 'http://192.168.1.28:3001'
-            R = requests.post(f"{url}/api/anniv/2020/attractions/odyssey/score", data=json.dumps(data), headers={"Content-Type": "application/json"})
+    if state.state == SCENE_FINAL:
+        import json
+        data = {"userId": users_to_id['Gilles'], "password": "gilles", "scores": [{"userId": users_to_id[state.data['user']], "points": 1 + int(state.score)}]}
+        print(data)
+        #data = {"userId": "5b1ba1c383bc8b10f30f1d61", "password": "gilles", "scores": [{"userId": "5b0719534d469f6928743b59", "points": 1}]}
+        url = URL
+        R = requests.post(f"{url}/api/anniv/2020/attractions/odyssey/score", data=json.dumps(data), headers={"Content-Type": "application/json"})
 
-            print('Success post')
-            pass
+        print('Success post')
+        pass
 
 
 def display_console():

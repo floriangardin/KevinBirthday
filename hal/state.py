@@ -16,7 +16,7 @@ musics = {
     'main': './assets/music/main_music.ogg'
 }
 
-FULLSCREEN = False
+FULLSCREEN = True
 if FULLSCREEN:
     infoObject = pygame.display.Info()
     SIZEX = infoObject.current_w
