@@ -18,8 +18,9 @@ State and params
 exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
-DEBUG_WINDOWS = True
+DEBUG_WINDOWS = False
 DEBUG_VOICE_KEVIN = False
+DEBUG_LAST_PHASE = True
 DEBUG_END = False
 BYPASS_LOGIN = True
 local = False
@@ -105,25 +106,25 @@ class QuestionSystem:
 
         self.questions = {
             QUESTION1: {"text": "Une question standard pour commencer: quel est le prénom de mon divin créateur Kévin ?",
-                        "voice_messages": ["Allez, c'est facile", "Je sais que tu as la réponse"],
+                        "voice_messages": ["Aller, c'est facile", "Je sais que tu as la réponse"],
                         "answer": ["kevin", "kévin"],
                         "exact": True,
                         "wrong_answer_state": QUESTION1_ANSWER_NOK,
                         "right_answer_state": QUESTION1_ANSWER_OK,
                         "wait_before_message":  20
                         },
-            QUESTION2: {"text": "Quelle est la couleur de la coque de l'ordinateur sur lequel tu tapes ?",
+            QUESTION2: {"text": "Quelle est la couleur de la coque de l'ordinateur sur lequel tu m'écris ?",
                         "voice_messages": [f"Je crois en toi", "Un peu d'entrain", "Maintenant il faut se dépêcher"],
-                        "answer": ["noir", "noire"],
+                        "answer": ["grise", "gris"],
                         "exact": True,
                         "wrong_answer_state": QUESTION2_ANSWER_NOK,
                         "right_answer_state": QUESTION2_ANSWER_OK,
                         "wait_before_message":  20},
 
             QUESTION3: {
-                "text": 'Allez, une petite pause, en attendant la prochaine question, peux-tu taper "Supprimer LOTRNOC.txt" dans le terminal ? Une simple formalité, bien entendu.',
+                "text": 'Aller, une petite pause, en attendant la prochaine question, peux-tu taper "supprimer LOTRNOC.txt" dans le terminal ? Une simple formalité, bien entendu.',
                 "voice_messages": ["Une simple formalité", "Il n'y a pas à hésiter", "Je te rappelle que tu es chronométré", "Tu perds des points"],
-                "answer": ["Supprimer LOTRNOC.txt"],
+                "answer": ["supprimer LOTRNOC.txt"],
                 "exact": False,
                 "wrong_answer_state": QUESTION3_ANSWER_NOK,
                 "right_answer_state": QUESTION3_ANSWER_OK,
@@ -141,7 +142,7 @@ class QuestionSystem:
             },
 
             QUESTION5: {
-                "text": "Allez la dernière, un peu plus difficile : quelle est la planète préférée de Kévin, qui n'est pas la Terre ?",
+                "text": "Aller la dernière, un peu plus difficile : quelle est la planète préférée de Kévin, qui n'est pas la Terre ?",
                 "voice_messages": ["Le temps presse", "C'est la dernière question", "Tu vas surement gagner le prix"],
                 "answer": ["mars"],
                 "exact": True,
@@ -173,7 +174,7 @@ class QuestionSystem:
             DESTRUCTION1: {
                 "text": "",
                 "voice_messages": ["C'est la merde"],
-                "answer": ["045791"],
+                "answer": ["045791", "45791"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION1,
                 "right_answer_state": DESTRUCTION2,
@@ -479,7 +480,11 @@ def update_state(events):
             state.text_programer.reset()
             state.mark_time = 0
             state.set_state(QUESTION1_MECHANT_ANSWER_NOK)
-
+        if DEBUG_LAST_PHASE:
+            state.text_programer.reset()
+            state.mark_time = 0
+            make_post_request("music", music=MUSIC_DICT['qvgdm'])
+            state.set_state(DESTRUCTION1)
         if DEBUG_END:
             print('GO TO END')
             state.text_programer.reset()
@@ -518,7 +523,7 @@ def update_state(events):
 
         if success:
             state.set_state(STATE_INTRO_MECHANT)
-            make_post_request('music', music=MUSIC_DICT['starwars'], volume=0.8)
+            make_post_request('music', music=MUSIC_DICT['starwars'], volume=0.5)
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",

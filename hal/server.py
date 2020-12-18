@@ -11,6 +11,7 @@ app = Flask(__name__)
 @app.route("/start")
 def main():
     state.set_state(STATE_WHITE_NOISE)
+    state.writer.clear()
     return make_response()
 
 @app.route("/say", methods = ['POST'])
