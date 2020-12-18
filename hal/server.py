@@ -33,7 +33,8 @@ def main_music():
         volume = request.json['volume'] if 'volume' in request.json else 1.0
         pygame.mixer_music.stop()
         pygame.mixer_music.load(music)
-        pygame.mixer_music.play(loops=1, volume=volume)
+        pygame.mixer.music.set_volume(volume)
+        pygame.mixer_music.play(loops=1)
         return make_response()
 
 
