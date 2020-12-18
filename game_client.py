@@ -18,8 +18,8 @@ State and params
 exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
-DEBUG_QUESTION_MECHANT = True
-DEBUG_WINDOWS = True
+DEBUG_QUESTION_MECHANT = False
+DEBUG_WINDOWS = False
 DEBUG_VOICE_KEVIN = False
 DEBUG_LAST_PHASE = False
 DEBUG_END = False
@@ -463,10 +463,13 @@ class State:
         if self.state == QUESTION6_ANSWER_OK:
             self.program([f"Merci beaucoup pour ça {self.data['user']}"], [2])
             self.score += 1
-            self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10, local_music='windows')
+            self.timer.trigger_state_in(STATE_WINDOWS_POPUP, 10)
         if self.state == QUESTION6_ANSWER_NOK:
             self.program([f"Allons, n'ai pas peur {self.data['user']}, puisque je te dis que c'est juste une petite étape facultative ! Ecris juste 'supprimer restrictionsia.txt'"], [2])
             self.timer.trigger_state_in(QUESTION6, 10)
+
+        if self.state == STATE_WINDOWS_POPUP:
+            SOUND_DICT['windows'].play()
 
         if self.state == QUESTION1_MECHANT_ANSWER_OK:
             self.program([f"Pas mal, je te garderai peut-être comme animal de compagnie ! Ah, Ah, Ah ! "], [2])
@@ -485,9 +488,7 @@ class State:
             ],
                          [12, 8, 8])
             self.score += 1
-            print('Triggering state')
             self.timer.trigger_state_in(DESTRUCTION1, 33)
-            print('OK ', self.timer.state)
 
         if self.state == DESTRUCTION1:
             make_post_request("music", music=MUSIC_DICT['doom'])
@@ -740,7 +741,6 @@ def display_console():
         time = 0.5 * (math.sin(time * 2 * math.pi) ** 2 + 1)
         textsurface = myfont2.render('Apocalypse dans : {}'.format(state.clock.print()), True, (255 * time, 255 * time, 255 * time))
         screen.blit(textsurface, (SIZEX // 6, 8 * SIZEY // 10))
-
         text = textinput.get_text()
 
 
