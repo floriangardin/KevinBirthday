@@ -13,8 +13,13 @@ sounds = {
 }
 musics = {
     'noise': './assets/music/white_noise',
-    'main': './assets/music/main_music.ogg'
+    'main': './assets/music/main_music.ogg',
+    "kevin": './assets/music/kevin.ogg',
+    "diesirae": "./assets/music/diesirae.ogg",
+    "doom": "./assets/music/Doom-Eternal-OST-The-Only-Thing-they-Fear-is-You-_Mick-Gordon_.ogg",
+    "starwars": "./assets/music/Star-Wars-Droid-Army-Theme.ogg"
 }
+
 
 FULLSCREEN = True
 if FULLSCREEN:
