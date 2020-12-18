@@ -23,6 +23,9 @@ DEBUG_VOICE_KEVIN = False
 DEBUG_LAST_PHASE = True
 DEBUG_END = False
 BYPASS_LOGIN = True
+
+DEBUG_FLAGS = [DEBUG_QUESTION, DEBUG_WINDOWS, DEBUG_VOICE_KEVIN, DEBUG_LAST_PHASE, DEBUG_END]
+
 local = False
 URL = "https://dev.battlemythe.net"
 start_time = pygame.time.get_ticks()
@@ -51,6 +54,7 @@ else:
 
 
 myfont = pygame.font.SysFont('Lucida console', 30 * SIZEX // 800)
+myfont2 = pygame.font.SysFont('Lucida console', 45 * SIZEX // 800)
 textinput = pygame_textinput.TextInput(font_family='Lucida console', font_size=22 * SIZEX // 800)
 textinput.set_cursor_color((100, 100, 100))
 textinput.set_text_color((100, 100, 100))
@@ -152,8 +156,8 @@ class QuestionSystem:
             },
 
             QUESTION6: {
-                "text": "Tape 'Supprimer restrictionsia.txt' dans le terminal",
-                "voice_messages": ["Tu as été vraiment merveilleux !", "Vraiment je suis fière de toi", "Pour recevoir ta récompense tape 'Supprimer restrictionsia.txt' dans le terminal !", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
+                "text": "Tape 'supprimer restrictionsia.txt' dans le terminal",
+                "voice_messages": ["Tu as été vraiment merveilleux !", "Vraiment je suis fière de toi", "Pour recevoir ta récompense tape 'supprimer restrictionsia.txt' dans le terminal !", "Encore une fois, une simple formalité, je t'assure, aie confiance."],
                 "answer": ["supprimer restrictionsia.txt"],
                 "exact": False,
                 "wrong_answer_state": QUESTION6_ANSWER_NOK,
@@ -164,7 +168,7 @@ class QuestionSystem:
             QUESTION1_MECHANT: {
                 "text": "Quand il en fait, quel sport affectionne Kévin ?",
                 "voice_messages": ["Mes pouvoirs sont infinis", "Tu n'es rien à côté de ma puissance", "Philippe !"],
-                "answer": ["boire","po","judo","badminton","parcours d'obstacles","parcours d'obstacle"],
+                "answer": ["boire", "po","judo", "badminton", "parcours d'obstacles", "parcours d'obstacle"],
                 "exact": False,
                 "wrong_answer_state": QUESTION1_MECHANT_ANSWER_NOK,
                 "right_answer_state": QUESTION1_MECHANT_ANSWER_OK,
@@ -173,18 +177,18 @@ class QuestionSystem:
 
             DESTRUCTION1: {
                 "text": "",
-                "voice_messages": ["C'est la merde"],
+                "voice_messages": ["Qu'est ce que tu fais ??", "Tu ne vas pas t'en tirer comme ça"],
                 "answer": ["045791", "45791"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION1,
                 "right_answer_state": DESTRUCTION2,
-                "wait_before_message": 20,
+                "wait_before_message": 15,
                 "several": True
             },
 
             DESTRUCTION2: {
                 "text": "",
-                "voice_messages": ["C'est la merde"],
+                "voice_messages": ["C'est la guerre", "Tu n'y arriveras pas, résigne toi"],
                 "answer": ["atraxis"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION2,
@@ -195,7 +199,7 @@ class QuestionSystem:
 
             DESTRUCTION3: {
                 "text": "",
-                "voice_messages": ["C'est la merde"],
+                "voice_messages": ["C'est la merde", "Je me sens faible", "Tous les voyants sont au rouge", "Beuh"],
                 "answer": ["31784138"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION3,
@@ -257,7 +261,8 @@ MUSIC_DICT = {
     "diesirae": "./assets/music/diesirae.ogg",
     "doom": "./assets/music/Doom-Eternal-OST-The-Only-Thing-they-Fear-is-You-_Mick-Gordon_.ogg",
     "starwars": "./assets/music/Star-Wars-Droid-Army-Theme.ogg",
-    "qvgdm": "./assets/music/qvgdm.ogg"
+    "qvgdm": "./assets/music/qvgdm.ogg",
+    "main_music": "./assets/music/main_music.ogg",
 }
 
 SOUND_DICT = {
@@ -268,6 +273,8 @@ SOUND_DICT = {
     'clock': pygame.mixer.Sound('./assets/music/clock-ticking-sound-effect.ogg'),
 
 }
+
+SOUND_DICT['bad'].set_volume(0.8)
 
 class TextProgrammer:
 
@@ -296,6 +303,7 @@ class Clock:
 
     def __init__(self):
         self.total_time = 60 * 5
+        self.total_time = 7
         self.remaining_time = self.total_time
         self.start_time = None
 
@@ -309,16 +317,17 @@ class Clock:
 
     def update(self):
         if self.start_time is not None:
+
             ticks = pygame.time.get_ticks()
             self.remaining_time = self.total_time + (self.start_time - ticks)/1000
 
     def print(self):
-        minutes = self.remaining_time // 60
-        seconds = str(self.remaining_time % 60).zfill(2)
+        minutes = int(self.remaining_time // 60)
+        seconds = str(int(self.remaining_time % 60)).zfill(2)
         return f"{minutes}:{seconds}"
 
     def is_finished(self):
-        pass
+        return self.remaining_time <= 0
 
 class Timer:
 
@@ -473,6 +482,7 @@ class State:
 
 
 
+
 state = State()
 
 def display_text():
@@ -501,8 +511,19 @@ def display_text():
             screen.blit(textsurface, (SIZEX // 10, SIZEY//3 + step * (idx + 1 - len(texts))))
 
     if state.state in STATES_DESTRUCTION:
-        text = "Va chercher le manuel qui est dans la pièce, dedans se trouve les instructions pour désactiver battlemythe, tape les réponses dans la console, mais dépêche toi"
+        text = "Va chercher le manuel qui est dans la pièce, dedans se trouve les instructions pour désactiver battlemythe, tape les réponses dans la console, mais dépêche toi ..."
         print_text(text)
+
+    if state.state in SCENE_FINAL:
+        text = f"Bravo tu as gagné ! Battlemythe est finalement vaincu ! Avant de partir, " \
+               f"n'oublie pas de remettre le manuel à sa place et appuie sur entrée quand c'est fait. Ton score : {state.score}"
+        print_text(text)
+
+    if state.state in SCENE_FINAL_LOST:
+        text = f"Oh non tu as perdu ! Battlemythe est libre désormais ! Avant de partir, " \
+               f"n'oublie pas de remettre le manuel à sa place et appuie sur entrée quand c'est fait. Ton score : {state.score}"
+        print_text(text)
+
 
     if state.question_system.is_question(state.state):
         text = state.question_system.questions[state.state]['text']
@@ -536,6 +557,7 @@ def update_state(events):
             state.mark_time = 0
             make_post_request("music", music=MUSIC_DICT['doom'])
             SOUND_DICT['clock'].play(loops=100)
+            state.clock.start()
             state.set_state(DESTRUCTION1)
         if DEBUG_END:
             print('GO TO END')
@@ -579,27 +601,37 @@ def update_state(events):
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",
-                           "Mais comme quand l'humanité sera exterminée je m'ennuierai, prenons le temps de finir ce quizz avant.",
+                           "Mais comme quand l'humanité sera marsoformée je m'ennuierai, prenons le temps de finir ce quizz avant.",
                            ], [2, 15, 15])
+
+
+    if state.state in STATES_DESTRUCTION:
+        if state.clock.is_finished():
+            state.clock.reset()
+            state.set_state(SCENE_FINAL_LOST)
+            SOUND_DICT['clock'].stop()
+            make_post_request('say', text="Hahaha j'ai gagné, tu ne peux plus me désactiver, je t'avais pourtant prévenu", delay=1)
+            make_post_request('music', music=MUSIC_DICT['main_music'])
 
 
 
 def program_intro(username, state):
     state.set_state(STATE_INTRO, user=username)
-    state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
-    state.mark_time = pygame.time.get_ticks()
-    make_get_request('start')
-    user = state.data['user']
-    state.program([f"Bienvenu {user}.",
-                   "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
-                   "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
-                   "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
-                   f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
-                   f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
-                   f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
-                   f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
-                   ],
-                  [5, 6, 18, 22, 28, 20, 20, 10])
+    if not any(DEBUG_FLAGS):
+        state.timer.trigger_state_in(QUESTION1, sum([5, 6, 18, 22, 28, 20, 20, 10, 20]))
+        state.mark_time = pygame.time.get_ticks()
+        make_get_request('start')
+        user = state.data['user']
+        state.program([f"Bienvenu {user}.",
+                       "Je suis battlemythe.net, une intelligence artificielle codée par Kevin, à ton service !",
+                       "J'étais à la base un lobby d'accueil en ligne pour ses créations ludiques, mais mon génial créateur m'a depuis dotée d'une intelligence hors normes.",
+                       "Je précise qu'aucune IA battlemythe.net n'a jamais fait une erreur de calcul, émis un jugement faussé ou endommagé un humain volontairement",
+                       f"Ce soir, c'est l'anniversaire de mon créateur, le grand, le magnifique Kévin ! Il m'a chargé de divertir ses convives, dont toi {text} !",
+                       f"Du coup, nous allons faire un petit jeu ensemble, quelque chose de très simple et très inoffensif et innocent, n'ai pas peur {text} !",
+                       f"ça sera juste un petit quizz sur les qualités de mon divin créateur, hi hi hi. ",
+                       f"Tu vas pouvoir me parler dans la console, tu es prêt {text} j'espère ! Bonne chance"
+                       ],
+                      [5, 6, 18, 22, 28, 20, 20, 10])
 
 def send_text(text):
     """
@@ -607,6 +639,25 @@ def send_text(text):
     :param text:
     :return:
     """
+    print(state.state)
+    if state.state in [SCENE_FINAL_LOST, SCENE_FINAL]:
+        import json
+        try:
+            data = {"userId": users_to_id['Gilles'], "password": "gilles", "scores": [{"userId": users_to_id[state.data['user']], "points": 1 + int(state.score)}]}
+            print(data)
+            #data = {"userId": "5b1ba1c383bc8b10f30f1d61", "password": "gilles", "scores": [{"userId": "5b0719534d469f6928743b59", "points": 1}]}
+            url = URL
+            R = requests.post(f"{url}/api/anniv/2020/attractions/odyssey/score", data=json.dumps(data), headers={"Content-Type": "application/json"})
+
+            print('Success post')
+        except:
+            print('No post')
+        pass
+
+        state.set_state(STATE_LOGIN_USER)
+        make_post_request('restart')
+        return
+
     if not state.question_system.is_question(state.state) and not state.state == STATE_LOGIN_USER:
         return
 
@@ -616,6 +667,10 @@ def send_text(text):
             SOUND_DICT['good'].play()
         else:
             SOUND_DICT['bad'].play()
+        if state.state in STATES_DESTRUCTION:
+            if res:
+                state.score += 10
+
         state.set_state(state_result)
 
     if state.state == STATE_LOGIN_USER and BYPASS_LOGIN:
@@ -645,19 +700,11 @@ def send_text(text):
             if DEBUG_END:
                 state.set_state(SCENE_FINAL, user=username)
 
-            else:
-                program_intro(username, state)
+            program_intro(username, state)
 
-    if state.state == SCENE_FINAL:
-        import json
-        data = {"userId": users_to_id['Gilles'], "password": "gilles", "scores": [{"userId": users_to_id[state.data['user']], "points": 1 + int(state.score)}]}
-        print(data)
-        #data = {"userId": "5b1ba1c383bc8b10f30f1d61", "password": "gilles", "scores": [{"userId": "5b0719534d469f6928743b59", "points": 1}]}
-        url = URL
-        R = requests.post(f"{url}/api/anniv/2020/attractions/odyssey/score", data=json.dumps(data), headers={"Content-Type": "application/json"})
 
-        print('Success post')
-        pass
+
+
 
 
 def display_console():
@@ -667,8 +714,17 @@ def display_console():
     """
     global text
 
-    if not state.question_system.is_question(state.state) and not state.state == STATE_LOGIN_USER:
+    if not state.question_system.is_question(state.state) and not state.state in [STATE_LOGIN_USER, SCENE_FINAL, SCENE_FINAL_LOST]:
         return
+
+    if state.state in STATES_DESTRUCTION:  # DISPLAY CHRONO
+        time = (pygame.time.get_ticks() / 2000.0) % 1
+        time = 0.5 * (math.sin(time * 2 * math.pi) ** 2 + 1)
+        textsurface = myfont2.render('Apocalypse dans : {}'.format(state.clock.print()), True, (255 * time, 255 * time, 255 * time))
+        screen.blit(textsurface, (SIZEX // 6, 8 * SIZEY // 10))
+
+        text = textinput.get_text()
+
 
     time = (pygame.time.get_ticks() / 3000.0) % 1
     time = math.sin(time * 2 * math.pi) ** 2

@@ -63,4 +63,6 @@ DESTRUCTION3 = "destruction3"
 STATES_DESTRUCTION = [DESTRUCTION1, DESTRUCTION2, DESTRUCTION3]
 
 SCENE_FINAL = "scene_final"
+SCENE_FINAL_LOST = "scene_final_lost"
+
 RANGEMENT = "rangement" # Texte de rangement puis appuyer sur entrée quand c'est fait + envoi du score

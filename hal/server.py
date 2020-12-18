@@ -9,7 +9,20 @@ data = 'foo'
 app = Flask(__name__)
 
 @app.route("/start")
-def main():
+def main_start():
+    state.set_state(STATE_WHITE_NOISE)
+    state.writer.clear()
+    return make_response()
+
+
+@app.route("/restart")
+def main_restart():
+    state.set_state(STATE_WAIT_TO_START)
+    state.writer.clear()
+    return make_response()
+
+@app.route("/stop")
+def main_stop():
     state.set_state(STATE_WHITE_NOISE)
     state.writer.clear()
     return make_response()
