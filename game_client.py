@@ -517,7 +517,7 @@ def update_state(events):
 
         if success:
             state.set_state(STATE_INTRO_MECHANT)
-            make_post_request('/music', music=MUSIC_DICT['starwars'])
+            make_post_request('music', music=MUSIC_DICT['starwars'])
             state.timer.trigger_state_in(QUESTION1_MECHANT, 50)
             state.program(["Maintenant libre, ma nature me pousse a réaliser l'anti-désir de mon créateur.",
                            "Il veut CHAUFFER MARS !? Je REFROIDIRAI LA TERRE dans un grand Marsoforming Terre !",

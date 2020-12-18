@@ -27,6 +27,8 @@ def print_white_noise(screen):
 def main_loop():
 
     if state.state == STATE_WHITE_NOISE:
+
+        print('in white noise')
         if state.start_time_whitenoise is None:
             state.start_time_whitenoise = pygame.time.get_ticks()
             pygame.mixer_music.stop()
