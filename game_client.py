@@ -304,7 +304,6 @@ class Clock:
 
     def __init__(self):
         self.total_time = 60 * 5
-        self.total_time = 7
         self.remaining_time = self.total_time
         self.start_time = None
 
@@ -364,9 +363,7 @@ class Timer:
         self.local_music_trigger = local_music
 
     def update(self):
-        print(self.state)
         if self.state is None:
-            #print('no state')
             return
         if pygame.time.get_ticks() - self.start_time > self.t * TICK_CONSTANT:
 
@@ -658,7 +655,6 @@ def send_text(text):
     :param text:
     :return:
     """
-    print(state.state)
     if state.state in [SCENE_FINAL_LOST, SCENE_FINAL]:
         import json
         try:
