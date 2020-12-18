@@ -23,7 +23,7 @@ def main_restart():
 
 @app.route("/stop")
 def main_stop():
-    state.set_state(STATE_WHITE_NOISE)
+    state.set_state(STATE_WHITE_NOISE2)
     state.writer.clear()
     return make_response()
 

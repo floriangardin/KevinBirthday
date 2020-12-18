@@ -35,6 +35,7 @@ else:
 WHITE_NOISE_DURATION = 1000
 STATE_WAIT_TO_START = 'WAIT_TO_START'
 STATE_WHITE_NOISE = 'WHITE_NOISE'
+STATE_WHITE_NOISE2 = 'WHITE_NOISE2'
 STATE_MAIN = 'MAIN'
 imgs_gilles = [pygame.image.load(image) for image in glob.glob("./assets/hal/*gif")]
 imgs_gilles = [pygame.transform.scale(picture, (picture.get_width() * SIZEY//800, picture.get_height() * SIZEY//800)) for picture in imgs_gilles]

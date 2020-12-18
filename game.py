@@ -28,7 +28,11 @@ def main_loop():
 
     if state.state == STATE_WAIT_TO_START:
         pygame.draw.rect(screen, (0, 0, 0), (0, 0, SIZEX, SIZEY))
-        
+
+    if state.state == STATE_WHITE_NOISE2:
+        print_white_noise(screen)
+
+
     if state.state == STATE_WHITE_NOISE:
 
         print('in white noise')
