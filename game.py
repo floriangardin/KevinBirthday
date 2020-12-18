@@ -68,7 +68,6 @@ while True:
         if event.type == pygame.QUIT:
             done = True
 
-
     if exception:
         try:  # Catch logic errors (because asynchronous is weird)
             main_loop()
