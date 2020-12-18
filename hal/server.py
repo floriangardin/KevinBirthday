@@ -31,9 +31,7 @@ def main_music():
     if request.method == 'POST':
         music = request.json['music']
         pygame.mixer_music.stop()
-        if music in musics.keys():
-            music = musics[music]
-            pygame.mixer_music.load(music)
+        pygame.mixer_music.load(music)
         pygame.mixer_music.play(loops=1)
         return make_response()
 
