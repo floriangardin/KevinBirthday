@@ -93,6 +93,7 @@ class WriterTemp:
 
     def clear(self):
         self.active = False
+        self.current_text = ''
         self.text = ''
 
     def start(self, text, start_time, delay):

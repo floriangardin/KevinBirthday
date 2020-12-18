@@ -655,7 +655,7 @@ def send_text(text):
         pass
 
         state.set_state(STATE_LOGIN_USER)
-        make_post_request('restart')
+        make_get_request('restart')
         return
 
     if not state.question_system.is_question(state.state) and not state.state == STATE_LOGIN_USER:
