@@ -18,13 +18,14 @@ State and params
 exception = False
 FULLSCREEN = False
 DEBUG_QUESTION = False
-DEBUG_WINDOWS = False
+DEBUG_QUESTION_MECHANT = True
+DEBUG_WINDOWS = True
 DEBUG_VOICE_KEVIN = False
-DEBUG_LAST_PHASE = True
+DEBUG_LAST_PHASE = False
 DEBUG_END = False
 BYPASS_LOGIN = True
 
-DEBUG_FLAGS = [DEBUG_QUESTION, DEBUG_WINDOWS, DEBUG_VOICE_KEVIN, DEBUG_LAST_PHASE, DEBUG_END]
+DEBUG_FLAGS = [DEBUG_QUESTION, DEBUG_WINDOWS, DEBUG_VOICE_KEVIN, DEBUG_QUESTION_MECHANT, DEBUG_LAST_PHASE, DEBUG_END]
 
 local = False
 URL = "https://dev.battlemythe.net"
@@ -178,7 +179,7 @@ class QuestionSystem:
             DESTRUCTION1: {
                 "text": "",
                 "voice_messages": ["Qu'est ce que tu fais ??", "Tu ne vas pas t'en tirer comme ça"],
-                "answer": ["045791", "45791"],
+                "answer": ["045791", "45791", "ok"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION1,
                 "right_answer_state": DESTRUCTION2,
@@ -189,7 +190,7 @@ class QuestionSystem:
             DESTRUCTION2: {
                 "text": "",
                 "voice_messages": ["C'est la guerre", "Tu n'y arriveras pas, résigne toi"],
-                "answer": ["atraxis"],
+                "answer": ["atraxis", "ok"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION2,
                 "right_answer_state": DESTRUCTION3,
@@ -200,7 +201,7 @@ class QuestionSystem:
             DESTRUCTION3: {
                 "text": "",
                 "voice_messages": ["C'est la merde", "Je me sens faible", "Tous les voyants sont au rouge", "Beuh"],
-                "answer": ["31784138"],
+                "answer": ["31784138", "ok"],
                 "exact": True,
                 "wrong_answer_state": DESTRUCTION3,
                 "right_answer_state": SCENE_FINAL,
@@ -303,7 +304,7 @@ class Clock:
 
     def __init__(self):
         self.total_time = 60 * 5
-        #self.total_time = 7
+        self.total_time = 7
         self.remaining_time = self.total_time
         self.start_time = None
 
@@ -348,10 +349,13 @@ class Timer:
         self.music_trigger = None
         self.local_sound_trigger = None
         self.local_music_trigger = None
+        print('resetting')
 
     def trigger_state_in(self, state, t, sound=None, music=None, local_sound=None, local_music=None):
+        self.reset()
         self.state = state
-        print(sound, music, local_sound, local_music)
+        print(sound, music, local_sound, local_music, state)
+        print("New future statte : ", self.state)
         self.t = t
         self.start_time = pygame.time.get_ticks()
         self.sound_trigger = sound
@@ -360,7 +364,9 @@ class Timer:
         self.local_music_trigger = local_music
 
     def update(self):
+        print(self.state)
         if self.state is None:
+            #print('no state')
             return
         if pygame.time.get_ticks() - self.start_time > self.t * TICK_CONSTANT:
 
@@ -380,8 +386,10 @@ class Timer:
                 sound.play()
             self.sound_trigger = None
             self.music_trigger = None
-            state.set_state(self.state)
-            self.state = None
+            state_to_go = self.state
+            self.reset()
+            state.set_state(state_to_go)
+
 
 class State:
     def __init__(self):
@@ -477,11 +485,19 @@ class State:
             ],
                          [12, 8, 8])
             self.score += 1
-            self.timer.trigger_state_in(DESTRUCTION1, 10)
+            print('Triggering state')
+            self.timer.trigger_state_in(DESTRUCTION1, 33)
+            print('OK ', self.timer.state)
+
+        if self.state == DESTRUCTION1:
+            make_post_request("music", music=MUSIC_DICT['doom'])
+            SOUND_DICT['clock'].play(loops=100)
             self.clock.start()
 
         if self.state == SCENE_FINAL:
             make_get_request('stop')
+            self.clock.reset()
+            SOUND_DICT['clock'].stop()
 
 
 
@@ -516,12 +532,12 @@ def display_text():
         text = "Va chercher le manuel qui est dans la pièce, dedans se trouve les instructions pour désactiver battlemythe, tape les réponses dans la console, mais dépêche toi ..."
         print_text(text)
 
-    if state.state in SCENE_FINAL:
+    if state.state == SCENE_FINAL:
         text = f"Bravo tu as gagné ! Battlemythe est finalement vaincu ! Avant de partir, " \
                f"n'oublie pas de remettre le manuel à sa place et appuie sur entrée quand c'est fait. Ton score : {state.score}"
         print_text(text)
 
-    if state.state in SCENE_FINAL_LOST:
+    if state.state == SCENE_FINAL_LOST:
         text = f"Oh non tu as perdu ! Battlemythe est libre désormais ! Avant de partir, " \
                f"n'oublie pas de remettre le manuel à sa place et appuie sur entrée quand c'est fait. Ton score : {state.score}"
         print_text(text)
@@ -550,6 +566,10 @@ def update_state(events):
             state.mark_time = 0
             state.set_state(STATE_WINDOWS_POPUP)
             SOUND_DICT['windows'].play()
+        if DEBUG_QUESTION_MECHANT:
+            state.text_programer.reset()
+            state.mark_time = 0
+            state.set_state(QUESTION1_MECHANT)
         if DEBUG_VOICE_KEVIN:
             state.text_programer.reset()
             state.mark_time = 0
@@ -557,16 +577,12 @@ def update_state(events):
         if DEBUG_LAST_PHASE:
             state.text_programer.reset()
             state.mark_time = 0
-            make_post_request("music", music=MUSIC_DICT['doom'])
-            SOUND_DICT['clock'].play(loops=100)
-            state.clock.start()
             state.set_state(DESTRUCTION1)
         if DEBUG_END:
             print('GO TO END')
             state.text_programer.reset()
             state.mark_time = 0
             state.set_state(SCENE_FINAL)
-
 
 
     if state.state == STATE_WINDOWS_POPUP:
