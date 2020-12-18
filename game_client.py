@@ -303,7 +303,7 @@ class Clock:
 
     def __init__(self):
         self.total_time = 60 * 5
-        self.total_time = 7
+        #self.total_time = 7
         self.remaining_time = self.total_time
         self.start_time = None
 
@@ -480,6 +480,8 @@ class State:
             self.timer.trigger_state_in(DESTRUCTION1, 10)
             self.clock.start()
 
+        if self.state == SCENE_FINAL:
+            make_get_request('stop')
 
 
 
@@ -813,10 +815,10 @@ def main_loop(events):
 
         text = "Steps before battlemythe destruction :"
         textsurface = myfont.render(text, True, (0, 0, 0))
-        screen.blit(textsurface, (SIZEX//20, SIZEY//20))
+        screen.blit(textsurface, (SIZEX//20, 3*SIZEY//5))
 
         for i in range(nb_tics - 1):
-            screen.blit(imgs_cross, (SIZEX//5 + i * SIZEX//7, SIZEY//20))
+            screen.blit(imgs_cross, (SIZEX//5 + i * SIZEX//7, 3*SIZEY//5))
 
 
 

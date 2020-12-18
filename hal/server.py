@@ -24,6 +24,9 @@ def main_restart():
 @app.route("/stop")
 def main_stop():
     state.set_state(STATE_WHITE_NOISE2)
+    pygame.mixer_music.stop()
+    pygame.mixer_music.load('./assets/music/white_noise.ogg')
+    pygame.mixer_music.play(loops=1)
     state.writer.clear()
     return make_response()
 
